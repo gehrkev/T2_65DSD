@@ -1,6 +1,7 @@
 package br.udesc.dsd;
 
 import br.udesc.dsd.controller.MalhaController;
+import br.udesc.dsd.model.Carro;
 import br.udesc.dsd.model.MalhaViaria;
 import br.udesc.dsd.model.Quadrante;
 
@@ -11,15 +12,31 @@ public class Main {
     public static void main(String[] args) throws IOException {
         // Carrega a malha do arquivo
         String caminhoArquivo = Thread.currentThread().getContextClassLoader().getResource("malha-exemplo-1.txt").getPath();
+        System.out.println("Caminho do arquivo: " + caminhoArquivo);
         MalhaController controller = new MalhaController(caminhoArquivo);
 
         // Imprime informações da malha para teste
         System.out.println("Arquivo carregado de: " + caminhoArquivo);
         testarMalha(controller.getMalha());
 
-        // Gera novo arquivo sem as dimensões
-        String novoArquivo = "malha-processada.txt";
-        gerarNovoArquivo(controller.getMalha(), novoArquivo);
+        Quadrante entrada = controller.getPontosDeEntrada().get(0);
+
+        //Cria um carro
+        Carro carro = new Carro(entrada, 500);
+        carro.setName("Carro-1");
+
+        entrada.adicionarCarro(carro);
+        entrada.setQuadranteDoCarro();
+
+        carro.start();
+
+        try {
+            carro.join(); // aguarda a thread do carro terminar
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+
+        System.out.println("Carro finalizou o percurso.");
     }
 
     private static void testarMalha(MalhaViaria malha) {
@@ -27,11 +44,12 @@ public class Main {
         System.out.println("\nTestando alguns quadrantes:");
 
         // Testa quadrante específico
-        Quadrante q00 = malha.getQuadrante(3, 7);
+        Quadrante q00 = malha.getQuadrante(4, 15);
         System.out.println("Quadrante (" + q00.getLinha()+ "," + q00.getColuna() +"):");
         System.out.println("- Direção: " + q00.getDirecao());
         System.out.println("- Tem carro? " + q00.temCarro());
         System.out.println("- Vizinhos: " + q00.getVizinhosDaFrente().size());
+        System.out.println("- É entrada: " + q00.isEntrada());
 
         // Imprime direções possíveis
         System.out.println("- Direções possíveis: " + q00.getDirecoesPossiveis());

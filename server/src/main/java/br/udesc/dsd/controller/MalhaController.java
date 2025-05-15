@@ -7,10 +7,13 @@ import br.udesc.dsd.model.Quadrante;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 public class MalhaController {
     private MalhaViaria malha;
+
+    private final List<Quadrante> pontosDeEntrada = new ArrayList<>();
 
     public MalhaController(String caminhoArquivo) {
         malha = carregarDeArquivo(caminhoArquivo);
@@ -21,7 +24,7 @@ public class MalhaController {
             int linhas = Integer.parseInt(leitor.readLine().trim());
             int colunas = Integer.parseInt(leitor.readLine().trim());
 
-            MalhaViaria malha = new MalhaViaria(linhas, colunas);
+            this.malha = new MalhaViaria(linhas, colunas);
 
             for (int i = 0; i < linhas; i++) {
                 String linha = leitor.readLine();
@@ -34,7 +37,7 @@ public class MalhaController {
                 }
             }
 
-            estabelecerPontosEntradaSaida();
+            estabelecerPontosEntrada();
             estabelecerConexoes();
 
             leitor.close();
@@ -46,21 +49,33 @@ public class MalhaController {
         return null;
     }
 
-    // TODO
-    // Ler bordas da malha
-    // 1) Linha 0: Se for 1, ponto de saída; se 3, ponto de entrada
-    // 2) Coluna 0: Se for 4, ponto de saída; se for 2, ponto de entrada
-    // 3) Linha final (int linhas - 1): Se for 3, ponto de saída; se for 1, ponto de entrada
-    // 4) Coluna final (int colunas - 1
-    private void estabelecerPontosEntradaSaida() {
-
-    }
-
     private void definirDirecaoQuadrante(int linha, int coluna, int valorDirecao) {
         Quadrante quadrante = malha.getQuadrantes().get(criarChave(linha, coluna));
         if (quadrante != null) {
             Direcao direcao = Direcao.fromValor(valorDirecao);
             quadrante.setDirecao(direcao);
+        }
+    }
+
+    private void estabelecerPontosEntrada() {
+        int linhas = malha.getLinhas();
+        int colunas = malha.getColunas();
+
+        for (int c = 1; c < colunas - 1; c++) {
+            adicionarSeEntrada(malha.getQuadrante(0, c), Direcao.BAIXO);
+            adicionarSeEntrada(malha.getQuadrante(linhas - 1, c), Direcao.CIMA);
+        }
+
+        for (int l = 1; l < linhas - 1; l++) {
+            adicionarSeEntrada(malha.getQuadrante(l, 0), Direcao.DIREITA);
+            adicionarSeEntrada(malha.getQuadrante(l, colunas - 1), Direcao.ESQUERDA);
+        }
+    }
+
+    private void adicionarSeEntrada(Quadrante q, Direcao direcaoEsperada) {
+        if (q != null && q.getDirecao() == direcaoEsperada) {
+            q.setEntrada(true);
+            pontosDeEntrada.add(q);
         }
     }
 
@@ -125,7 +140,6 @@ public class MalhaController {
             // TODO cases de nada e cruzamentos
             default:
                 return null;
-
             // TODO falta criar o vizinho
         }
 
@@ -147,5 +161,9 @@ public class MalhaController {
 
     public MalhaViaria getMalha() {
         return malha;
+    }
+
+    public List<Quadrante> getPontosDeEntrada() {
+        return pontosDeEntrada;
     }
 }
