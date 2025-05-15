@@ -7,14 +7,14 @@ public class Quadrante {
     private final int coluna;
     private Direcao direcao;
     private Carro carro;
-    private Map<Direcao, Quadrante> vizinhos;
+    private final Map<Direcao, Quadrante> vizinhosDaFrente;
 
     public Quadrante(int linha, int coluna, Direcao direcao) {
         this.linha = linha;
         this.coluna = coluna;
         this.direcao = direcao;
         this.carro = null;
-        this.vizinhos = new EnumMap<>(Direcao.class);
+        this.vizinhosDaFrente = new EnumMap<>(Direcao.class);
     }
 
     public int getLinha() {
@@ -52,19 +52,24 @@ public class Quadrante {
     }
 
     public void adicionarVizinho(Direcao direcao, Quadrante vizinho) {
-        vizinhos.put(direcao, vizinho);
+        vizinhosDaFrente.put(direcao, vizinho);
     }
 
     public Quadrante getVizinho(Direcao direcao) {
-        return vizinhos.get(direcao);
+        return vizinhosDaFrente.get(direcao);
     }
 
-    public Map<Direcao, Quadrante> getVizinhos() {
-        return Collections.unmodifiableMap(vizinhos);
+    public Map<Direcao, Quadrante> getVizinhosDaFrente() {
+        return Collections.unmodifiableMap(vizinhosDaFrente);
     }
 
     public Set<Direcao> getDirecoesPossiveis() {
-        return vizinhos.keySet();
+        return vizinhosDaFrente.keySet();
+    }
+
+    // TODO setar direcao do carro ao ele entrar no quadrante.
+    public void setQuadranteDoCarro() {
+        this.carro.setQuadranteAtual(this);
     }
 
     @Override
