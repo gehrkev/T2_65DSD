@@ -4,6 +4,7 @@ import br.udesc.dsd.controller.MalhaController;
 import br.udesc.dsd.model.Carro;
 import br.udesc.dsd.model.MalhaViaria;
 import br.udesc.dsd.model.Quadrante;
+import br.udesc.dsd.view.MalhaView;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -17,12 +18,14 @@ public class Main {
 
         // Imprime informações da malha para teste
         System.out.println("Arquivo carregado de: " + caminhoArquivo);
-        testarMalha(controller.getMalha());
+        MalhaViaria malhaViaria = controller.getMalha();
+        testarMalha(malhaViaria);
+        MalhaView malhaView = new MalhaView(malhaViaria);
 
         Quadrante entrada = controller.getPontosDeEntrada().get(0);
 
         //Cria um carro
-        Carro carro = new Carro(entrada, 500);
+        Carro carro = new Carro(entrada, 500, malhaView);
         carro.setName("Carro-1");
 
         entrada.adicionarCarro(carro);

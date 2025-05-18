@@ -1,13 +1,20 @@
 package br.udesc.dsd.model;
 
+import br.udesc.dsd.view.MalhaView;
+import javafx.application.Platform;
+
 public class Carro extends Thread {
     private Quadrante quadranteAtual;
-    private long velocidade; // thread sleep para movimentação entre quadrantes
 
-    public Carro(Quadrante quadranteInicial, long velocidade) {
+    private long velocidade; // thread sleep para movimentação entre quadrantes
+    private final MalhaView malhaView;
+
+    public Carro(Quadrante quadranteInicial, long velocidade, MalhaView malhaView) {
         this.quadranteAtual = quadranteInicial;
         this.velocidade = velocidade;
+        this.malhaView = malhaView;
     }
+
 
     public Quadrante getQuadranteAtual() { return quadranteAtual; }
 
@@ -34,15 +41,19 @@ public class Carro extends Thread {
     @Override
     public void run() {
         try {
+            Platform.runLater(malhaView::atualizarCelulas);
+            Thread.sleep(velocidade);
             while (true) {
                 Quadrante atual = this.quadranteAtual;
                 Direcao direcao = atual.getDirecao();
+                Platform.runLater(malhaView::atualizarCelulas);
 
                 // Verifica se há vizinho na direção permitida
                 Quadrante proximo = atual.getVizinho(direcao);
                 if (proximo == null) {
                     System.out.println("Carro saiu da malha. Encerrando thread.");
                     atual.removerCarro();
+                    Platform.runLater(malhaView::atualizarCelulas);
                     break;
                 }
 
@@ -52,6 +63,7 @@ public class Carro extends Thread {
                         atual.removerCarro();
                         this.setQuadranteAtual(proximo);
                         proximo.adicionarCarro(this);
+                        Platform.runLater(malhaView::atualizarCelulas);
                         System.out.println("Carro movido para: " + proximo);
                     } else {
                         // Espera um pouco se o próximo quadrante está ocupado
@@ -67,6 +79,10 @@ public class Carro extends Thread {
             Thread.currentThread().interrupt();
             System.out.println("Thread do carro interrompida.");
         }
+    }
+
+    public long getVelocidade() {
+        return velocidade;
     }
 
 }

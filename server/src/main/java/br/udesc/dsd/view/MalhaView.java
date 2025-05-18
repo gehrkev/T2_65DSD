@@ -10,10 +10,25 @@ import javafx.scene.shape.Rectangle;
 public class MalhaView {
 
     private final GridPane grid;
+    private final MalhaViaria malha;
 
     public MalhaView(MalhaViaria malha) {
+        this.malha = malha;
         this.grid = new GridPane();
 
+        desenharCelulas();
+    }
+
+    public GridPane getGrid() {
+        return grid;
+    }
+
+    public void atualizarCelulas() {
+        grid.getChildren().clear();
+        desenharCelulas();
+    }
+
+    private void desenharCelulas() {
         for (int i = 0; i < malha.getLinhas(); i++) {
             for (int j = 0; j < malha.getColunas(); j++) {
                 Quadrante q = malha.getQuadrante(i, j);
@@ -23,15 +38,14 @@ public class MalhaView {
                     cell.setFill(Color.LIGHTGRAY);
                 } else {
                     cell.setFill(Color.WHITE);
-                    cell.setStroke(Color.BLACK);
+                    if (q.temCarro()) {
+                        cell.setFill(Color.RED);
+                    }
                 }
 
+                cell.setStroke(Color.BLACK);
                 grid.add(cell, j, i);
             }
         }
-    }
-
-    public GridPane getGrid() {
-        return grid;
     }
 }
