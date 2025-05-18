@@ -8,6 +8,7 @@ public class Carro extends Thread {
 
     private long velocidade; // thread sleep para movimentação entre quadrantes
     private final MalhaView malhaView;
+    private Runnable onTermino;
 
     public Carro(Quadrante quadranteInicial, long velocidade, MalhaView malhaView) {
         this.quadranteAtual = quadranteInicial;
@@ -79,10 +80,15 @@ public class Carro extends Thread {
             Thread.currentThread().interrupt();
             System.out.println("Thread do carro interrompida.");
         }
+        if (onTermino != null) onTermino.run();
     }
 
     public long getVelocidade() {
         return velocidade;
+    }
+
+    public void setOnTermino(Runnable onTermino) {
+        this.onTermino = onTermino;
     }
 
 }
