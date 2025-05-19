@@ -140,7 +140,6 @@ public class MalhaController {
             // TODO cases de nada e cruzamentos
             default:
                 return null;
-            // TODO falta criar o vizinho
         }
 
         if (coordenadaValida(novaLinha, novaColuna)) {
