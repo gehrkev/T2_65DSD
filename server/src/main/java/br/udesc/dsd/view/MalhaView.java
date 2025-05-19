@@ -82,7 +82,7 @@ public class MalhaView {
         ToggleGroup grupoModo = new ToggleGroup();
         monitorRadio.setToggleGroup(grupoModo);
         semaforoRadio.setToggleGroup(grupoModo);
-        monitorRadio.setSelected(true);
+        semaforoRadio.setSelected(true);
 
         VBox painel = new VBox(10,
                 new Label("Limite de veículos:"), limiteVeiculosSpinner,

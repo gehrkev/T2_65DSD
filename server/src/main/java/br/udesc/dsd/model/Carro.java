@@ -14,6 +14,7 @@ public class Carro extends Thread {
         this.quadranteAtual = quadranteInicial;
         this.velocidade = velocidade;
         this.malhaView = malhaView;
+        this.setName("Carro-" + System.currentTimeMillis());
     }
 
 
@@ -42,11 +43,13 @@ public class Carro extends Thread {
     @Override
     public void run() {
         try {
+            //Thread.sleep(3000);
+
             Platform.runLater(malhaView::atualizarCelulas);
             Thread.sleep(velocidade);
             while (true) {
                 Quadrante atual = this.quadranteAtual;
-                Direcao direcao = atual.getDirecao();
+                Direcao direcao = atual.getDirecao(); //Breakpoint Aqui para debuggar
                 Platform.runLater(malhaView::atualizarCelulas);
 
                 // Verifica se há vizinho na direção permitida
