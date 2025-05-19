@@ -1,6 +1,7 @@
 package br.udesc.dsd.model;
 
 import java.util.*;
+import java.util.concurrent.Semaphore;
 
 public class Quadrante {
     private final int linha;
@@ -9,6 +10,7 @@ public class Quadrante {
     private Direcao direcao;
     private Carro carro;
     private final Map<Direcao, Quadrante> vizinhosDaFrente;
+    private final Semaphore semaforo;
 
     public Quadrante(int linha, int coluna, Direcao direcao) {
         this.linha = linha;
@@ -17,6 +19,7 @@ public class Quadrante {
         this.direcao = direcao;
         this.carro = null;
         this.vizinhosDaFrente = new EnumMap<>(Direcao.class);
+        this.semaforo = new Semaphore(1, true);
     }
 
     public int getLinha() {
@@ -43,6 +46,10 @@ public class Quadrante {
         return carro;
     }
 
+    public Semaphore getSemaforo() {
+        return semaforo;
+    }
+
     public void adicionarCarro(Carro carro) {
         if (!temCarro()) {
             this.carro = carro;
@@ -50,7 +57,10 @@ public class Quadrante {
     }
 
     public void removerCarro() {
-        this.carro = null;
+        if (temCarro()) {
+            this.carro = null;
+            semaforo.release();
+        }
     }
 
     public void adicionarVizinho(Direcao direcao, Quadrante vizinho) {
@@ -69,7 +79,6 @@ public class Quadrante {
         return vizinhosDaFrente.keySet();
     }
 
-    // TODO setar direcao do carro ao ele entrar no quadrante.
     public void setQuadranteDoCarro() {
         this.carro.setQuadranteAtual(this);
     }

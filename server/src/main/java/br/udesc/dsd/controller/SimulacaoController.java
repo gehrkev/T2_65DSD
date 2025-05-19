@@ -7,6 +7,7 @@ import javafx.application.Platform;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 public class SimulacaoController {
 
@@ -47,14 +48,16 @@ public class SimulacaoController {
                         if (carrosAtivos.size() < limite) {
                             int entradaIndex = (int) (Math.random() * malhaController.getPontosDeEntrada().size());
                             Carro carro = criarNovoCarro(entradaIndex);
-                            carrosAtivos.add(carro);
 
-                            // Quando o carro termina, remove da lista
-                            carro.setOnTermino(() -> {
-                                carrosAtivos.remove(carro);
-                            });
+                            if (carro != null) {
+                                carrosAtivos.add(carro);
 
-                            carro.start();
+                                carro.setOnTermino(() -> {
+                                    carrosAtivos.remove(carro);
+                                });
+
+                                carro.start();
+                            }
                         }
                     });
 
@@ -80,7 +83,7 @@ public class SimulacaoController {
         }
 
         for (Carro c : carrosAtivos) {
-            c.interrupt(); // Força término das threads de carros
+            c.interrupt();
         }
 
         carrosAtivos.clear();
@@ -96,13 +99,23 @@ public class SimulacaoController {
 
     private Carro criarNovoCarro(int entradaIndex) {
         Quadrante entrada = malhaController.getPontosDeEntrada().get(entradaIndex);
-        Carro carro = new Carro(entrada, 800, malhaView);
+        Random random = new Random();
+        long velocidadeAleatoria = 200 + random.nextInt(1201);
+        Carro carro = new Carro(entrada, velocidadeAleatoria, malhaView);
         carro.setName("Carro-" + System.currentTimeMillis());
 
-        entrada.adicionarCarro(carro);
-        entrada.setQuadranteDoCarro();
-        Platform.runLater(malhaView::atualizarCelulas);
+        try {
+            entrada.getSemaforo().acquire();
+            entrada.adicionarCarro(carro);
+            entrada.setQuadranteDoCarro();
 
-        return carro;
+            Platform.runLater(malhaView::atualizarCelulas);
+
+            return carro;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            System.out.println("Não foi possível criar novo carro: " + e.getMessage());
+            return null;
+        }
     }
 }

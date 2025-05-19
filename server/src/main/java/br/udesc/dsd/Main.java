@@ -11,12 +11,10 @@ import java.io.PrintWriter;
 
 public class Main {
     public static void main(String[] args) throws IOException {
-        // Carrega a malha do arquivo
         String caminhoArquivo = Thread.currentThread().getContextClassLoader().getResource("malha-exemplo-1.txt").getPath();
         System.out.println("Caminho do arquivo: " + caminhoArquivo);
         MalhaController controller = new MalhaController(caminhoArquivo);
 
-        // Imprime informações da malha para teste
         System.out.println("Arquivo carregado de: " + caminhoArquivo);
         MalhaViaria malhaViaria = controller.getMalha();
         testarMalha(malhaViaria);
@@ -24,29 +22,33 @@ public class Main {
 
         Quadrante entrada = controller.getPontosDeEntrada().get(0);
 
-        //Cria um carro
         Carro carro = new Carro(entrada, 500, malhaView);
         carro.setName("Carro-1");
 
-        entrada.adicionarCarro(carro);
-        entrada.setQuadranteDoCarro();
-
-        carro.start();
-
         try {
-            carro.join(); // aguarda a thread do carro terminar
+            entrada.getSemaforo().acquire();
+            entrada.adicionarCarro(carro);
+            entrada.setQuadranteDoCarro();
+
+            carro.start();
+
+            try {
+                carro.join();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                System.out.println("Thread principal interrompida enquanto aguardava o carro: " + e.getMessage());
+            }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
+            System.out.println("Não foi possível adicionar o carro: " + e.getMessage());
         }
 
         System.out.println("Carro finalizou o percurso.");
     }
 
     private static void testarMalha(MalhaViaria malha) {
-        // Testa alguns quadrantes
         System.out.println("\nTestando alguns quadrantes:");
 
-        // Testa quadrante específico
         Quadrante q00 = malha.getQuadrante(4, 15);
         System.out.println("Quadrante (" + q00.getLinha()+ "," + q00.getColuna() +"):");
         System.out.println("- Direção: " + q00.getDirecao());
@@ -54,10 +56,8 @@ public class Main {
         System.out.println("- Vizinhos: " + q00.getVizinhosDaFrente().size());
         System.out.println("- É entrada: " + q00.isEntrada());
 
-        // Imprime direções possíveis
         System.out.println("- Direções possíveis: " + q00.getDirecoesPossiveis());
 
-        // Testa vizinhos
         System.out.println("\nTestando conexões:");
         q00.getVizinhosDaFrente().forEach((direcao, vizinho) -> {
             System.out.println("- Vizinho na direção " + direcao + ": (" +
@@ -68,7 +68,6 @@ public class Main {
 
     private static void gerarNovoArquivo(MalhaViaria malha, String nomeArquivo) {
         try (PrintWriter writer = new PrintWriter(nomeArquivo)) {
-            // Começa do quadrante (0,0) e vai linha por linha
             int linha = 0;
             int coluna = 0;
             Quadrante atual = malha.getQuadrante(0, 0);

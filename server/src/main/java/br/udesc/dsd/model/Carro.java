@@ -3,12 +3,16 @@ package br.udesc.dsd.model;
 import br.udesc.dsd.view.MalhaView;
 import javafx.application.Platform;
 
+import java.util.Random;
+import java.util.concurrent.TimeUnit;
+
 public class Carro extends Thread {
     private Quadrante quadranteAtual;
-
     private long velocidade; // thread sleep para movimentação entre quadrantes
     private final MalhaView malhaView;
     private Runnable onTermino;
+    private boolean ativo = true;
+    private final Random rand = new Random();
 
     public Carro(Quadrante quadranteInicial, long velocidade, MalhaView malhaView) {
         this.quadranteAtual = quadranteInicial;
@@ -43,46 +47,57 @@ public class Carro extends Thread {
     @Override
     public void run() {
         try {
-            //Thread.sleep(3000);
-
+            // Atualiza a interface gráfica inicialmente
             Platform.runLater(malhaView::atualizarCelulas);
-            Thread.sleep(velocidade);
-            while (true) {
+
+            while (ativo) {
                 Quadrante atual = this.quadranteAtual;
-                Direcao direcao = atual.getDirecao(); //Breakpoint Aqui para debuggar
+                Direcao direcao = atual.getDirecao();
+
+                // Atualiza a interface após cada movimento
                 Platform.runLater(malhaView::atualizarCelulas);
 
                 // Verifica se há vizinho na direção permitida
                 Quadrante proximo = atual.getVizinho(direcao);
                 if (proximo == null) {
-                    System.out.println("Carro saiu da malha. Encerrando thread.");
+                    System.out.println(getName() + " saiu da malha. Encerrando thread.");
                     atual.removerCarro();
                     Platform.runLater(malhaView::atualizarCelulas);
+                    ativo = false;
                     break;
                 }
 
-                synchronized (proximo) {
-                    if (!proximo.temCarro()) {
-                        // Move para o próximo quadrante
-                        atual.removerCarro();
+                boolean moveu = false;
+                do {
+                    // Tenta adquirir o próximo quadrante com timeout
+                    boolean adquiriuProximo = proximo.getSemaforo().tryAcquire(500, TimeUnit.MILLISECONDS);
+
+                    if (adquiriuProximo) {
+                        // Conseguiu o próximo quadrante, agora faz a movimentação
+                        atual.removerCarro(); // Isso libera o semáforo do quadrante atual
                         this.setQuadranteAtual(proximo);
                         proximo.adicionarCarro(this);
-                        Platform.runLater(malhaView::atualizarCelulas);
-                        System.out.println("Carro movido para: " + proximo);
-                    } else {
-                        // Espera um pouco se o próximo quadrante está ocupado
-                        System.out.println("Aguardando quadrante livre: " + proximo);
-                        Thread.sleep(velocidade);
-                        continue;
-                    }
-                }
 
-                Thread.sleep(velocidade); // Espera entre movimentos
+                        // Atualiza a interface após o movimento
+                        Platform.runLater(malhaView::atualizarCelulas);
+                        System.out.println(getName() + " movido para: " + proximo);
+                        moveu = true;
+                    } else {
+                        // Não conseguiu o próximo quadrante, aguarda tempo aleatório
+                        System.out.println(getName() + " não conseguiu mover para: " + proximo + ". Tentando novamente.");
+                        Thread.sleep(rand.nextInt(500)); // Aguarda tempo aleatório entre 0-499ms
+                    }
+                } while (!moveu && ativo);
+
+                // Espera entre movimentos
+                Thread.sleep(velocidade);
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            System.out.println("Thread do carro interrompida.");
+            System.out.println(getName() + " interrompido.");
         }
+
+        // Executa a ação de término, se houver
         if (onTermino != null) onTermino.run();
     }
 
