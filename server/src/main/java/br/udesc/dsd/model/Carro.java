@@ -104,19 +104,19 @@ public class Carro extends Thread {
         boolean acquired = proximo.getSemaforo().tryAcquire(500, TimeUnit.MILLISECONDS);
 
         if (acquired) {
-            Quadrante anterior = this.quadranteAtual;
+            Quadrante atual = this.quadranteAtual;
 
-            anterior.setCarro(null);
+            atual.setCarro(null);
             this.quadranteAtual = proximo;
             proximo.setCarro(this);
 
             if (segurandoSemaforo) {
-                anterior.getSemaforo().release();
+                atual.getSemaforo().release();
             }
 
             segurandoSemaforo = true;
 
-            Platform.runLater(() -> malhaView.atualizarQuadrantes(anterior, proximo));
+            Platform.runLater(() -> malhaView.atualizarQuadrantes(atual, proximo));
             return true;
         }
 
@@ -238,19 +238,19 @@ public class Carro extends Thread {
     private void atravessarCruzamento(List<Quadrante> caminho) throws InterruptedException {
         for (int i = 0; i < caminho.size(); i++) {
             Quadrante proximo = caminho.get(i);
-            Quadrante anterior = this.quadranteAtual;
+            Quadrante atual = this.quadranteAtual;
 
-            anterior.setCarro(null);
+            atual.setCarro(null);
             this.quadranteAtual = proximo;
             proximo.setCarro(this);
 
             if (i == 0 && segurandoSemaforo) {
-                anterior.getSemaforo().release();
+                atual.getSemaforo().release();
             } else if (i > 0) {
                 caminho.get(i - 1).getSemaforo().release();
             }
 
-            Platform.runLater(() -> malhaView.atualizarQuadrantes(anterior, proximo));
+            Platform.runLater(() -> malhaView.atualizarQuadrantes(atual, proximo));
             System.out.println(getName() + ": Moveu para " + proximo + " no cruzamento.");
 
             Thread.sleep(velocidade / 2);

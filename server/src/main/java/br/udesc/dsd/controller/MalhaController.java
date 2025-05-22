@@ -74,7 +74,6 @@ public class MalhaController {
 
     private void adicionarSeEntrada(Quadrante q, Direcao direcaoEsperada) {
         if (q != null && q.getDirecao() == direcaoEsperada) {
-            q.setEntrada(true);
             pontosDeEntrada.add(q);
         }
     }

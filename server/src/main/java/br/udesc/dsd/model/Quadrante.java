@@ -6,7 +6,6 @@ import java.util.concurrent.Semaphore;
 public class Quadrante {
     private final int linha;
     private final int coluna;
-    private boolean entrada;
     private Direcao direcao;
     private volatile Carro carro;  // Volátil para visibilidade de thread
     private final Map<Direcao, Quadrante> vizinhosDaFrente;
@@ -15,7 +14,7 @@ public class Quadrante {
     public Quadrante(int linha, int coluna, Direcao direcao) {
         this.linha = linha;
         this.coluna = coluna;
-        this.entrada = false;
+
         this.direcao = direcao;
         this.carro = null;
         this.vizinhosDaFrente = new EnumMap<>(Direcao.class);
@@ -74,10 +73,6 @@ public class Quadrante {
         if (this.carro != null) {
             this.carro.setQuadranteAtual(this);
         }
-    }
-
-    public void setEntrada(boolean entrada) {
-        this.entrada = entrada;
     }
 
     @Override
