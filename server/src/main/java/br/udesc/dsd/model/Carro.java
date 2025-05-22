@@ -50,18 +50,27 @@ public class Carro extends Thread {
                 boolean entrandoEmCruzamento = !isCruzamento(atual.getDirecao()) && isCruzamento(proximo.getDirecao());
 
                 if (entrandoEmCruzamento) {
-                    List<Direcao> saidas = verSaidasPossiveis(proximo);
-                    Direcao direcaoEscolhida = sortearSaida(saidas);
-                    List<Quadrante> caminho = percorrerCruzamento(atual, direcaoEscolhida);
+                    List<Quadrante> saidasPossiveis = coletarSaidasPossiveis(atual);
+
+                    if (saidasPossiveis.isEmpty()) {
+                        System.out.println(getName() + " não encontrou saídas do cruzamento. Tentando novamente.");
+                        Thread.sleep(rand.nextInt(500));
+                        continue;
+                    }
+
+                    Quadrante saidaEscolhida = saidasPossiveis.get(rand.nextInt(saidasPossiveis.size()));
+                    System.out.println(getName() + " escolheu saída: " + saidaEscolhida);
+
+                    List<Quadrante> caminho = encontrarCaminhoParaSaida(atual, saidaEscolhida);
 
                     if (caminho.isEmpty()) {
+                        System.out.println(getName() + " não conseguiu encontrar caminho para a saída escolhida.");
                         Thread.sleep(rand.nextInt(500));
                         continue;
                     }
 
                     if (reservarCaminho(caminho)) {
                         atravessarCruzamento(caminho);
-                        // não dá continue — deixa o loop seguir para próxima iteração
                     } else {
                         Thread.sleep(rand.nextInt(500));
                         continue;
@@ -107,61 +116,66 @@ public class Carro extends Thread {
                 direcao == Direcao.CRUZAMENTO_BAIXO_E_ESQUERDA;
     }
 
-    private List<Direcao> verSaidasPossiveis(Quadrante cruzamento) {
-        List<Direcao> saidas = new ArrayList<>();
-        for (Direcao d : cruzamento.getDirecoesPossiveis()) {
-            Quadrante vizinho = cruzamento.getVizinho(d);
-            if (vizinho == null) continue;
-
-            if (!isCruzamento(vizinho.getDirecao())) {
-                saidas.add(d);
-            } else {
-                // verifica se a partir do cruzamento há caminho válido
-                for (Direcao d2 : vizinho.getDirecoesPossiveis()) {
-                    Quadrante pos = vizinho.getVizinho(d2);
-                    if (pos != null && !isCruzamento(pos.getDirecao())) {
-                        saidas.add(d);
-                        break;
-                    }
-                }
-            }
-        }
-        return saidas;
-    }
-
-
-    private Direcao sortearSaida(List<Direcao> saidas) {
-        if (saidas.isEmpty()) return null;
-        return saidas.get(rand.nextInt(saidas.size()));
-    }
-
-    private List<Quadrante> percorrerCruzamento(Quadrante entrada, Direcao direcaoSaida) {
-        List<Quadrante> caminho = new ArrayList<>();
+    /** BFS para coletar todas as saídas possíveis (vizinhos não-cruzamento) */
+    private List<Quadrante> coletarSaidasPossiveis(Quadrante entrada) {
+        List<Quadrante> saidas = new ArrayList<>();
         Set<Quadrante> visitados = new HashSet<>();
         Queue<Quadrante> fila = new LinkedList<>();
 
         Quadrante inicio = entrada.getVizinho(entrada.getDirecao());
-        if (inicio == null) return caminho;
+        if (inicio == null) return saidas;
 
         fila.add(inicio);
-        Map<Quadrante, Quadrante> veioDe = new HashMap<>();
-
-        Quadrante destino = null;
+        visitados.add(inicio);
 
         while (!fila.isEmpty()) {
             Quadrante atual = fila.poll();
-            visitados.add(atual);
 
             for (Direcao d : atual.getDirecoesPossiveis()) {
                 Quadrante vizinho = atual.getVizinho(d);
                 if (vizinho == null || visitados.contains(vizinho)) continue;
 
+                visitados.add(vizinho);
+
+                if (isCruzamento(vizinho.getDirecao())) {
+                    fila.add(vizinho);
+                } else {
+                    saidas.add(vizinho);
+                }
+            }
+        }
+
+        return saidas;
+    }
+
+    /** BFS para encontrar o caminho específico da entrada até a saída escolhida */
+    private List<Quadrante> encontrarCaminhoParaSaida(Quadrante entrada, Quadrante saidaAlvo) {
+        List<Quadrante> caminho = new ArrayList<>();
+        Set<Quadrante> visitados = new HashSet<>();
+        Queue<Quadrante> fila = new LinkedList<>();
+        Map<Quadrante, Quadrante> veioDe = new HashMap<>();
+
+        Quadrante inicio = entrada.getVizinho(entrada.getDirecao());
+        if (inicio == null) return caminho;
+
+        fila.add(inicio);
+        visitados.add(inicio);
+        veioDe.put(inicio, null);
+
+        boolean encontrouSaida = false;
+
+        while (!fila.isEmpty() && !encontrouSaida) {
+            Quadrante atual = fila.poll();
+
+            for (Direcao d : atual.getDirecoesPossiveis()) {
+                Quadrante vizinho = atual.getVizinho(d);
+                if (vizinho == null || visitados.contains(vizinho)) continue;
+
+                visitados.add(vizinho);
                 veioDe.put(vizinho, atual);
 
-                if (d == direcaoSaida && !isCruzamento(vizinho.getDirecao())) {
-                    destino = vizinho;
-                    veioDe.put(destino, atual);
-                    fila.clear();
+                if (vizinho == saidaAlvo) {
+                    encontrouSaida = true;
                     break;
                 }
 
@@ -171,12 +185,16 @@ public class Carro extends Thread {
             }
         }
 
-        if (destino == null) return caminho;
+        if (!encontrouSaida) return caminho;
 
-        Quadrante atual = destino;
-        while (atual != null && atual != entrada) {
+        Quadrante atual = saidaAlvo;
+        while (atual != null && veioDe.get(atual) != null) {
             caminho.add(0, atual);
             atual = veioDe.get(atual);
+        }
+
+        if (atual != null) {
+            caminho.add(0, atual);
         }
 
         return caminho;
@@ -214,15 +232,14 @@ public class Carro extends Thread {
             Thread.sleep(velocidade / 2);
 
             if (i > 0) {
-                caminho.get(i - 1).getSemaforo().release(); // libera o anterior
+                caminho.get(i - 1).getSemaforo().release();
             }
         }
 
-        // Libera o último semáforo após sair do cruzamento
-        caminho.get(caminho.size() - 1).getSemaforo().release();
+        if (!caminho.isEmpty()) {
+            caminho.get(caminho.size() - 1).getSemaforo().release();
+        }
     }
-
-
 
     public long getVelocidade() {
         return velocidade;
