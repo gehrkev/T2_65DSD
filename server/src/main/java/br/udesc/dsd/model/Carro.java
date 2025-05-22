@@ -3,11 +3,7 @@ package br.udesc.dsd.model;
 import br.udesc.dsd.view.MalhaView;
 import javafx.application.Platform;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Random;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 public class Carro extends Thread {
@@ -31,21 +27,6 @@ public class Carro extends Thread {
         this.quadranteAtual = quadrante;
     }
 
-        // Se o vizinho da frente estiver ocupado por outro carro, ele espera.q (Thread.wait())
-        // Caso contrário, move-se para aquele quadrante. Não esquecer de desocupar o quadrante antigo depois de mover-se
-        // (quadranteAtual.carro = null)
-        // () -> quadranteAtual.getVizinhosDaFrente().forEach() ??
-
-        // Adicionar casos especiais para CRUZAMENTO_CIMA(5), CRUZAMENTO_DIREITA(6), CRUZAMENTO_BAIXO(7),
-        //    CRUZAMENTO_ESQUERDA(8), CRUZAMENTO_CIMA_E_DIREITA(9), CRUZAMENTO_CIMA_E_ESQUERDA(10),
-        //    CRUZAMENTO_BAIXO_E_DIREITA(11), CRUZAMENTO_BAIXO_E_ESQUERDA(12):
-        //
-        // Se o quadrante atual NÃO FOR cruzamento E o vizinho da frente for CRUZAMENTO,
-        // A malha deve retornar o set dos 4 quadrantes que compõe o cruzamento, e outro set com os possíveis destinos
-        // O carro deve definir seu destino aleatoriamente antes de iniciar
-        //
-        // Ele somente deverá iniciar o percurso do cruzamento ao garantir que todos os quadrantes do cruzamento
-        // e o destino estão livres. Ao sair ele deve sinalizar ao semaforo.
     @Override
     public void run() {
         try {
@@ -69,16 +50,19 @@ public class Carro extends Thread {
                 boolean entrandoEmCruzamento = !isCruzamento(atual.getDirecao()) && isCruzamento(proximo.getDirecao());
 
                 if (entrandoEmCruzamento) {
-                    List<Quadrante> caminhoCruzamento = determinarCaminhoCruzamento(atual, proximo);
+                    List<Direcao> saidas = verSaidasPossiveis(proximo);
+                    Direcao direcaoEscolhida = sortearSaida(saidas);
+                    List<Quadrante> caminho = percorrerCruzamento(atual, direcaoEscolhida);
 
-                    if (caminhoCruzamento.isEmpty()) {
-                        System.out.println(getName() + ": Não encontrou caminho válido pelo cruzamento. Aguardando.");
+                    if (caminho.isEmpty()) {
                         Thread.sleep(rand.nextInt(500));
                         continue;
                     }
 
-                    boolean atravessou = atravessarCruzamento(atual, caminhoCruzamento);
-                    if (!atravessou) {
+                    if (reservarCaminho(caminho)) {
+                        atravessarCruzamento(caminho);
+                        // não dá continue — deixa o loop seguir para próxima iteração
+                    } else {
                         Thread.sleep(rand.nextInt(500));
                         continue;
                     }
@@ -97,7 +81,7 @@ public class Carro extends Thread {
                             moveu = true;
                         } else {
                             System.out.println(getName() + " não conseguiu mover para: " + proximo + ". Tentando novamente.");
-                            Thread.sleep(rand.nextInt(500)); // Aguarda tempo aleatório entre 0-499ms
+                            Thread.sleep(rand.nextInt(500));
                         }
                     } while (!moveu && ativo);
                 }
@@ -123,127 +107,122 @@ public class Carro extends Thread {
                 direcao == Direcao.CRUZAMENTO_BAIXO_E_ESQUERDA;
     }
 
-    // TODO Checar lógica, os carros sempre estão saindo pela mesmo caminho
-    /**
-     * Determina o caminho a ser percorrido através do cruzamento.
-     * @return Lista de quadrantes formando o caminho pelo cruzamento, incluindo a saída
-     */
-    private List<Quadrante> determinarCaminhoCruzamento(Quadrante quadranteInicial, Quadrante primeiroCruzamento) {
-        List<Quadrante> caminho = new ArrayList<>();
+    private List<Direcao> verSaidasPossiveis(Quadrante cruzamento) {
+        List<Direcao> saidas = new ArrayList<>();
+        for (Direcao d : cruzamento.getDirecoesPossiveis()) {
+            Quadrante vizinho = cruzamento.getVizinho(d);
+            if (vizinho == null) continue;
 
-        caminho.add(primeiroCruzamento);
-
-        Quadrante atual = primeiroCruzamento;
-        Set<String> visitados = new HashSet<>();
-        String chaveAtual = atual.getLinha() + "," + atual.getColuna();
-        visitados.add(chaveAtual);
-
-        Direcao direcaoEntrada = quadranteInicial.getDirecao();
-
-        boolean encontrouSaida = false;
-        int passos = 0;
-        final int MAX_PASSOS = 5; // Limite para evitar loops infinitos
-
-        while (!encontrouSaida && passos < MAX_PASSOS) {
-            passos++;
-
-            Set<Direcao> direcoesPossiveis = atual.getDirecoesPossiveis();
-
-            List<Direcao> direcoes = new ArrayList<>(direcoesPossiveis);
-
-            if (atual == primeiroCruzamento) {
-                direcoes.sort((d1, d2) -> {
-                    if (d1 == direcaoEntrada) return -1;
-                    if (d2 == direcaoEntrada) return 1;
-                    return 0;
-                });
-            }
-
-            boolean moveu = false;
-
-            for (Direcao d : direcoes) {
-                Quadrante vizinho = atual.getVizinho(d);
-                if (vizinho != null) {
-                    String chaveVizinho = vizinho.getLinha() + "," + vizinho.getColuna();
-
-                    if (!visitados.contains(chaveVizinho)) {
-                        visitados.add(chaveVizinho);
-
-                        if (isCruzamento(vizinho.getDirecao())) {
-                            caminho.add(vizinho);
-                            atual = vizinho;
-                            moveu = true;
-                            break;
-                        } else {
-                            caminho.add(vizinho);
-                            encontrouSaida = true;
-                            moveu = true;
-                            break;
-                        }
+            if (!isCruzamento(vizinho.getDirecao())) {
+                saidas.add(d);
+            } else {
+                // verifica se a partir do cruzamento há caminho válido
+                for (Direcao d2 : vizinho.getDirecoesPossiveis()) {
+                    Quadrante pos = vizinho.getVizinho(d2);
+                    if (pos != null && !isCruzamento(pos.getDirecao())) {
+                        saidas.add(d);
+                        break;
                     }
                 }
             }
+        }
+        return saidas;
+    }
 
-            if (!moveu && !encontrouSaida) {
-                System.out.println(getName() + ": Não foi possível encontrar uma saída válida do cruzamento.");
-                return new ArrayList<>();
+
+    private Direcao sortearSaida(List<Direcao> saidas) {
+        if (saidas.isEmpty()) return null;
+        return saidas.get(rand.nextInt(saidas.size()));
+    }
+
+    private List<Quadrante> percorrerCruzamento(Quadrante entrada, Direcao direcaoSaida) {
+        List<Quadrante> caminho = new ArrayList<>();
+        Set<Quadrante> visitados = new HashSet<>();
+        Queue<Quadrante> fila = new LinkedList<>();
+
+        Quadrante inicio = entrada.getVizinho(entrada.getDirecao());
+        if (inicio == null) return caminho;
+
+        fila.add(inicio);
+        Map<Quadrante, Quadrante> veioDe = new HashMap<>();
+
+        Quadrante destino = null;
+
+        while (!fila.isEmpty()) {
+            Quadrante atual = fila.poll();
+            visitados.add(atual);
+
+            for (Direcao d : atual.getDirecoesPossiveis()) {
+                Quadrante vizinho = atual.getVizinho(d);
+                if (vizinho == null || visitados.contains(vizinho)) continue;
+
+                veioDe.put(vizinho, atual);
+
+                if (d == direcaoSaida && !isCruzamento(vizinho.getDirecao())) {
+                    destino = vizinho;
+                    veioDe.put(destino, atual);
+                    fila.clear();
+                    break;
+                }
+
+                if (isCruzamento(vizinho.getDirecao())) {
+                    fila.add(vizinho);
+                }
             }
         }
 
-        if (!encontrouSaida) {
-            System.out.println(getName() + ": Atingiu o limite de passos sem encontrar saída do cruzamento.");
-            return new ArrayList<>();
+        if (destino == null) return caminho;
+
+        Quadrante atual = destino;
+        while (atual != null && atual != entrada) {
+            caminho.add(0, atual);
+            atual = veioDe.get(atual);
         }
 
         return caminho;
     }
 
-    private boolean atravessarCruzamento(Quadrante quadranteAtual, List<Quadrante> caminho) throws InterruptedException {
-        List<Quadrante> semafAdquiridos = new ArrayList<>();
+    private boolean reservarCaminho(List<Quadrante> caminho) throws InterruptedException {
+        List<Quadrante> adquiridos = new ArrayList<>();
 
-        try {
-            for (Quadrante q : caminho) {
-                boolean adquirido = q.getSemaforo().tryAcquire(500, TimeUnit.MILLISECONDS);
-                if (!adquirido) {
-                    for (Quadrante qa : semafAdquiridos) {
-                        qa.getSemaforo().release();
-                    }
-                    System.out.println(getName() + ": Não conseguiu adquirir todos os semáforos do cruzamento.");
-                    return false;
+        for (Quadrante q : caminho) {
+            boolean acquired = q.getSemaforo().tryAcquire(500, TimeUnit.MILLISECONDS);
+            if (!acquired) {
+                for (Quadrante aq : adquiridos) {
+                    aq.getSemaforo().release();
                 }
-                semafAdquiridos.add(q);
+                return false;
             }
-
-            System.out.println(getName() + ": Adquiriu todos os semáforos para atravessar o cruzamento.");
-
-            Quadrante atual = quadranteAtual;
-
-            for (int i = 0; i < caminho.size(); i++) {
-                Quadrante proximo = caminho.get(i);
-
-                atual.removerCarro();
-
-                this.setQuadranteAtual(proximo);
-                proximo.adicionarCarro(this);
-
-                Platform.runLater(malhaView::atualizarCelulas);
-                System.out.println(getName() + ": Moveu para " + proximo + " dentro do cruzamento.");
-
-                atual = proximo;
-
-                Thread.sleep(velocidade / 2);
-            }
-
-            return true;
-        } catch (InterruptedException e) {
-            for (Quadrante q : semafAdquiridos) {
-                if (q != this.quadranteAtual) {
-                    q.getSemaforo().release();
-                }
-            }
-            throw e;
+            adquiridos.add(q);
         }
+
+        return true;
     }
+
+    private void atravessarCruzamento(List<Quadrante> caminho) throws InterruptedException {
+        for (int i = 0; i < caminho.size(); i++) {
+            Quadrante proximo = caminho.get(i);
+            Quadrante anterior = quadranteAtual;
+
+            anterior.removerCarro();
+            setQuadranteAtual(proximo);
+            proximo.adicionarCarro(this);
+
+            Platform.runLater(malhaView::atualizarCelulas);
+            System.out.println(getName() + ": Moveu para " + proximo + " no cruzamento.");
+
+            Thread.sleep(velocidade / 2);
+
+            if (i > 0) {
+                caminho.get(i - 1).getSemaforo().release(); // libera o anterior
+            }
+        }
+
+        // Libera o último semáforo após sair do cruzamento
+        caminho.get(caminho.size() - 1).getSemaforo().release();
+    }
+
+
 
     public long getVelocidade() {
         return velocidade;
