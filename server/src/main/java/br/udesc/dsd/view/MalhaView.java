@@ -58,7 +58,7 @@ public class MalhaView {
                 if (q.getDirecao() == Direcao.NADA) {
                     cell.setFill(Color.LIGHTGRAY);
                 } else {
-                    cell.setFill(q.temCarro() ? Color.RED : Color.WHITE);
+                    cell.setFill(q.temCarro() ? q.getCarro().getCor() : Color.WHITE);
                 }
 
                 cell.setStroke(Color.BLACK);

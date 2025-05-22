@@ -5,6 +5,7 @@ import javafx.application.Platform;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import javafx.scene.paint.Color;
 
 public class Carro extends Thread {
     private Quadrante quadranteAtual;
@@ -13,18 +14,18 @@ public class Carro extends Thread {
     private Runnable onTermino;
     private boolean ativo = true;
     private final Random rand = new Random();
+    private static final Color[] CORES_DISPONIVEIS = {
+            Color.ORANGERED, Color.STEELBLUE, Color.FORESTGREEN, Color.DARKORANGE,
+            Color.MEDIUMPURPLE, Color.GOLDENROD, Color.DEEPPINK, Color.LIGHTSKYBLUE
+    };
+    private final Color cor;
 
     public Carro(Quadrante quadranteInicial, long velocidade, MalhaView malhaView) {
         this.quadranteAtual = quadranteInicial;
         this.velocidade = velocidade;
         this.malhaView = malhaView;
+        this.cor = CORES_DISPONIVEIS[rand.nextInt(CORES_DISPONIVEIS.length)];
         this.setName("Carro-" + System.currentTimeMillis());
-    }
-
-    public Quadrante getQuadranteAtual() { return quadranteAtual; }
-
-    public void setQuadranteAtual(Quadrante quadrante) {
-        this.quadranteAtual = quadrante;
     }
 
     @Override
@@ -241,8 +242,18 @@ public class Carro extends Thread {
         }
     }
 
+    public Quadrante getQuadranteAtual() { return quadranteAtual; }
+
+    public void setQuadranteAtual(Quadrante quadrante) {
+        this.quadranteAtual = quadrante;
+    }
+
     public long getVelocidade() {
         return velocidade;
+    }
+
+    public Color getCor() {
+        return cor;
     }
 
     public void setOnTermino(Runnable onTermino) {
