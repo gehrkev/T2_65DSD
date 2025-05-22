@@ -7,10 +7,13 @@ import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
+import java.util.HashMap;
+import java.util.Map;
 
 public class MalhaView {
 
     private final GridPane grid;
+    private final Map<String, Rectangle> celulas = new HashMap<>();
     private final VBox painelControles;
     private final HBox layoutPrincipal;
     private final MalhaViaria malha;
@@ -25,12 +28,11 @@ public class MalhaView {
     private final Label mensagemFinal;
     private final StackPane stackPane;
 
-
     public MalhaView(MalhaViaria malha) {
         this.malha = malha;
         this.grid = new GridPane();
         this.painelControles = construirPainelControles();
-        desenharCelulas();
+        inicializarCelulas();
 
         mensagemFinal = new Label("SIMULAÇÃO ENCERRADA");
         mensagemFinal.setStyle("-fx-font-size: 24px; -fx-text-fill: #f14e4e;");
@@ -44,12 +46,7 @@ public class MalhaView {
         return layoutPrincipal;
     }
 
-    public void atualizarCelulas() {
-        grid.getChildren().clear();
-        desenharCelulas();
-    }
-
-    private void desenharCelulas() {
+    private void inicializarCelulas() {
         for (int i = 0; i < malha.getLinhas(); i++) {
             for (int j = 0; j < malha.getColunas(); j++) {
                 Quadrante q = malha.getQuadrante(i, j);
@@ -58,12 +55,41 @@ public class MalhaView {
                 if (q.getDirecao() == Direcao.NADA) {
                     cell.setFill(Color.LIGHTGRAY);
                 } else {
-                    cell.setFill(q.temCarro() ? q.getCarro().getCor() : Color.WHITE);
+                    cell.setFill(Color.WHITE);
                 }
 
                 cell.setStroke(Color.BLACK);
                 grid.add(cell, j, i);
+                celulas.put(i + "," + j, cell);
             }
+        }
+    }
+
+    public void atualizarCelulas() {
+        for (int i = 0; i < malha.getLinhas(); i++) {
+            for (int j = 0; j < malha.getColunas(); j++) {
+                Quadrante q = malha.getQuadrante(i, j);
+                Rectangle cell = celulas.get(i + "," + j);
+
+                if (cell != null && q.getDirecao() != Direcao.NADA) {
+                    cell.setFill(q.temCarro() ? q.getCarro().getCor() : Color.WHITE);
+                }
+            }
+        }
+    }
+
+    public void atualizarQuadrante(Quadrante q) {
+        if (q == null) return;
+
+        Rectangle cell = celulas.get(q.getLinha() + "," + q.getColuna());
+        if (cell != null && q.getDirecao() != Direcao.NADA) {
+            cell.setFill(q.temCarro() ? q.getCarro().getCor() : Color.WHITE);
+        }
+    }
+
+    public void atualizarQuadrantes(Quadrante... quadrantes) {
+        for (Quadrante q : quadrantes) {
+            atualizarQuadrante(q);
         }
     }
 
@@ -97,5 +123,4 @@ public class MalhaView {
     public void exibirMensagemFinal(boolean exibir) {
         mensagemFinal.setVisible(exibir);
     }
-
 }

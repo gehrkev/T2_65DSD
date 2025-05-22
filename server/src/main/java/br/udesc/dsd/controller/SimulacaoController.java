@@ -5,9 +5,8 @@ import br.udesc.dsd.model.Quadrante;
 import br.udesc.dsd.view.MalhaView;
 import javafx.application.Platform;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
+import java.util.concurrent.Semaphore;
 
 public class SimulacaoController {
 
@@ -16,6 +15,7 @@ public class SimulacaoController {
 
     private Thread threadInsercao;
     private final List<Carro> carrosAtivos = new ArrayList<>();
+    private final Semaphore semaforoListaCarros = new Semaphore(1, true); // evita problemas de insert/remove com a threadInsercao
     private volatile boolean insercaoAtiva = false;
 
     public SimulacaoController(MalhaController malhaController, MalhaView malhaView) {
@@ -31,6 +31,64 @@ public class SimulacaoController {
         malhaView.encerrarSimulacaoBotao.setOnAction(e -> encerrarSimulacao());
     }
 
+    private int getNumeroCarrosAtivos() throws InterruptedException {
+        semaforoListaCarros.acquire();
+        try {
+            return carrosAtivos.size();
+        } finally {
+            semaforoListaCarros.release();
+        }
+    }
+
+    private void adicionarCarro(Carro carro) throws InterruptedException {
+        semaforoListaCarros.acquire();
+        try {
+            carrosAtivos.add(carro);
+            System.out.println("Carro adicionado: " + carro.getName() +
+                    ". Total ativo: " + carrosAtivos.size());
+        } finally {
+            semaforoListaCarros.release();
+        }
+    }
+
+    private void removerCarro(Carro carro) throws InterruptedException {
+        semaforoListaCarros.acquire();
+        try {
+            carrosAtivos.remove(carro);
+            System.out.println("Carro removido: " + carro.getName() +
+                    ". Total ativo: " + carrosAtivos.size());
+        } finally {
+            semaforoListaCarros.release();
+        }
+    }
+
+    private List<Carro> getCarrosAtivos() throws InterruptedException {
+        semaforoListaCarros.acquire();
+        try {
+            return new ArrayList<>(carrosAtivos);
+        } finally {
+            semaforoListaCarros.release();
+        }
+    }
+
+    private boolean carrosAtivosVazio() throws InterruptedException {
+        semaforoListaCarros.acquire();
+        try {
+            return carrosAtivos.isEmpty();
+        } finally {
+            semaforoListaCarros.release();
+        }
+    }
+
+    private void limparCarrosAtivos() throws InterruptedException {
+        semaforoListaCarros.acquire();
+        try {
+            carrosAtivos.clear();
+        } finally {
+            semaforoListaCarros.release();
+        }
+    }
+
     private void iniciarSimulacao() {
         Platform.runLater(() -> malhaView.exibirMensagemFinal(false));
         if (insercaoAtiva) return;
@@ -44,22 +102,38 @@ public class SimulacaoController {
         threadInsercao = new Thread(() -> {
             try {
                 while (insercaoAtiva) {
-                    Platform.runLater(() -> {
-                        if (carrosAtivos.size() < limite) {
-                            int entradaIndex = (int) (Math.random() * malhaController.getPontosDeEntrada().size());
-                            Carro carro = criarNovoCarro(entradaIndex);
+                    try {
+                        if (getNumeroCarrosAtivos() < limite) {
+                            Platform.runLater(() -> {
+                                try {
+                                    int entradaIndex = (int) (Math.random() *
+                                            malhaController.getPontosDeEntrada().size());
+                                    Carro carro = criarNovoCarro(entradaIndex);
 
-                            if (carro != null) {
-                                carrosAtivos.add(carro);
+                                    if (carro != null) {
+                                        adicionarCarro(carro);
 
-                                carro.setOnTermino(() -> {
-                                    carrosAtivos.remove(carro);
-                                });
+                                        carro.setOnTermino(() -> {
+                                            try {
+                                                removerCarro(carro);
+                                            } catch (InterruptedException e) {
+                                                Thread.currentThread().interrupt();
+                                                System.err.println("Erro ao remover carro: " + e.getMessage());
+                                            }
+                                        });
 
-                                carro.start();
-                            }
+                                        carro.start();
+                                    }
+                                } catch (InterruptedException e) {
+                                    Thread.currentThread().interrupt();
+                                    System.err.println("Erro ao criar carro: " + e.getMessage());
+                                }
+                            });
                         }
-                    });
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        break;
+                    }
 
                     Thread.sleep(intervalo);
                 }
@@ -68,6 +142,7 @@ public class SimulacaoController {
             }
         });
 
+        threadInsercao.setName("Thread-Insercao");
         threadInsercao.start();
     }
 
@@ -78,38 +153,97 @@ public class SimulacaoController {
 
     private void encerrarSimulacao() {
         insercaoAtiva = false;
-        if (threadInsercao != null) {
-            threadInsercao.interrupt();
-        }
 
-        for (Carro c : carrosAtivos) {
-            c.interrupt();
-        }
+        try {
+            if (threadInsercao != null && threadInsercao.isAlive()) {
+                threadInsercao.interrupt();
+                try {
+                    threadInsercao.join(1000);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            }
 
-        carrosAtivos.clear();
+            List<Carro> carrosParaFinalizar = getCarrosAtivos();
+            System.out.println("Solicitando parada de " + carrosParaFinalizar.size() + " carros...");
+
+            for (Carro carro : carrosParaFinalizar) {
+                carro.requestShutdown();
+            }
+
+            long shutdownStart = System.currentTimeMillis();
+            long timeout = 5000;
+
+            while (!carrosAtivosVazio() &&
+                    (System.currentTimeMillis() - shutdownStart) < timeout) {
+                try {
+                    int remaining = getNumeroCarrosAtivos();
+                    System.out.println("Aguardando " + remaining + " carros finalizarem...");
+
+                    Thread.sleep(100);
+                    Platform.runLater(malhaView::atualizarCelulas);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    break;
+                }
+            }
+
+            if (!carrosAtivosVazio()) {
+                System.out.println("Aguardando threads restantes com join...");
+                List<Carro> carrosRestantes = getCarrosAtivos();
+
+                for (Carro carro : carrosRestantes) {
+                    try {
+                        carro.join(500);
+                        if (carro.isAlive()) {
+                            System.out.println(carro.getName() + " não finalizou no tempo esperado.");
+                            carro.interrupt();
+                        }
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    }
+                }
+            }
+
+            limparCarrosAtivos();
+
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            System.err.println("Erro durante encerramento da simulação: " + e.getMessage());
+        }
 
         for (Quadrante q : malhaController.getMalha().getQuadrantes().values()) {
-            q.removerCarro();
+            q.setCarro(null);
         }
-        Platform.runLater(malhaView::atualizarCelulas);
+
+        Platform.runLater(() -> {
+            malhaView.atualizarCelulas();
+            malhaView.exibirMensagemFinal(true);
+        });
 
         System.out.println("Simulação encerrada!");
-        Platform.runLater(() -> malhaView.exibirMensagemFinal(true));
     }
 
     private Carro criarNovoCarro(int entradaIndex) {
         Quadrante entrada = malhaController.getPontosDeEntrada().get(entradaIndex);
-        Random random = new Random();
-        long velocidadeAleatoria = 200 + random.nextInt(1201);
+        Random rand = new Random();
+        long velocidadeAleatoria = 200 + rand.nextInt(801);
+
+        String nomeUnico = String.format("Carro-%d-%d",
+                System.currentTimeMillis(),
+                rand.nextInt(1000));
+
         Carro carro = new Carro(entrada, velocidadeAleatoria, malhaView);
-        carro.setName("Carro-" + System.currentTimeMillis());
+        carro.setName(nomeUnico);
 
         try {
             entrada.getSemaforo().acquire();
-            entrada.adicionarCarro(carro);
+            entrada.setCarro(carro);
             entrada.setQuadranteDoCarro();
 
-            Platform.runLater(malhaView::atualizarCelulas);
+            Platform.runLater(() -> {
+                malhaView.atualizarQuadrante(entrada);
+            });
 
             return carro;
         } catch (InterruptedException e) {

@@ -8,16 +8,13 @@ import javafx.stage.Stage;
 
 public class MainFX extends Application {
 
-    private MalhaController controller;
-    private MalhaView malhaView;
-
     @Override
     public void start(Stage primaryStage) {
         String caminhoArquivo = getClass().getClassLoader().getResource("malha-exemplo-3.txt").getPath();
-        controller = new MalhaController(caminhoArquivo);
+        MalhaController malhaController = new MalhaController(caminhoArquivo);
 
-        malhaView = new MalhaView(controller.getMalha());
-        SimulacaoController simulacaoController = new SimulacaoController(controller, malhaView);
+        MalhaView malhaView = new MalhaView(malhaController.getMalha());
+        SimulacaoController simulacaoController = new SimulacaoController(malhaController, malhaView);
 
         Scene scene = new Scene(malhaView.getRoot());
         primaryStage.setScene(scene);

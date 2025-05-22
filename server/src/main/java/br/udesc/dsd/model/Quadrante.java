@@ -8,7 +8,7 @@ public class Quadrante {
     private final int coluna;
     private boolean entrada;
     private Direcao direcao;
-    private Carro carro;
+    private volatile Carro carro;  // Volátil para visibilidade de thread
     private final Map<Direcao, Quadrante> vizinhosDaFrente;
     private final Semaphore semaforo;
 
@@ -46,21 +46,12 @@ public class Quadrante {
         return carro;
     }
 
+    public void setCarro(Carro carro) {
+        this.carro = carro;
+    }
+
     public Semaphore getSemaforo() {
         return semaforo;
-    }
-
-    public void adicionarCarro(Carro carro) {
-        if (!temCarro()) {
-            this.carro = carro;
-        }
-    }
-
-    public void removerCarro() {
-        if (temCarro()) {
-            this.carro = null;
-            semaforo.release();
-        }
     }
 
     public void adicionarVizinho(Direcao direcao, Quadrante vizinho) {
@@ -80,11 +71,9 @@ public class Quadrante {
     }
 
     public void setQuadranteDoCarro() {
-        this.carro.setQuadranteAtual(this);
-    }
-
-    public boolean isEntrada() {
-        return entrada;
+        if (this.carro != null) {
+            this.carro.setQuadranteAtual(this);
+        }
     }
 
     public void setEntrada(boolean entrada) {

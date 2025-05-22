@@ -105,7 +105,6 @@ public class MalhaController {
         }
     }
 
-    // TODO Checar
     private List<Direcao> obterDirecoesPermitidas(Direcao direcao) {
         return switch (direcao) {
             case CIMA, CRUZAMENTO_CIMA -> List.of(Direcao.CIMA);
@@ -137,7 +136,6 @@ public class MalhaController {
             case ESQUERDA:
                 novaColuna--;
                 break;
-            // TODO cases de nada e cruzamentos
             default:
                 return null;
         }
