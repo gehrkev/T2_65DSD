@@ -7,7 +7,7 @@ public class Quadrante {
     private final int linha;
     private final int coluna;
     private Direcao direcao;
-    private volatile Carro carro;  // Volátil para visibilidade de thread
+    private volatile ICarro carro;  // Volátil para visibilidade de thread
     private final Map<Direcao, Quadrante> vizinhosDaFrente;
     private final Semaphore semaforo;
 
@@ -41,11 +41,11 @@ public class Quadrante {
         return carro != null;
     }
 
-    public Carro getCarro() {
+    public ICarro getCarro() {
         return carro;
     }
 
-    public void setCarro(Carro carro) {
+    public void setCarro(ICarro carro) {
         this.carro = carro;
     }
 

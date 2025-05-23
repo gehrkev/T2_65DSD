@@ -7,7 +7,7 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import javafx.scene.paint.Color;
 
-public class Carro extends Thread {
+public class CarroSemaforo extends Thread implements ICarro {
     private Quadrante quadranteAtual;
     private long velocidade; // thread sleep para movimentação entre quadrantes
     private final MalhaView malhaView;
@@ -23,7 +23,7 @@ public class Carro extends Thread {
     private Runnable onTermino;
     private final Random rand = new Random();
 
-    public Carro(Quadrante quadranteInicial, long velocidade, MalhaView malhaView) {
+    public CarroSemaforo(Quadrante quadranteInicial, long velocidade, MalhaView malhaView) {
         this.quadranteAtual = quadranteInicial;
         this.velocidade = velocidade;
         this.malhaView = malhaView;

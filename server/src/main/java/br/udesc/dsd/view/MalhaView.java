@@ -16,7 +16,7 @@ public class MalhaView {
     private final Map<String, Rectangle> celulas = new HashMap<>();
     private final VBox painelControles;
     private final HBox layoutPrincipal;
-    private final MalhaViaria malha;
+    private MalhaViaria malha;
 
     public Spinner<Integer> limiteVeiculosSpinner;
     public Spinner<Integer> intervaloSpinner;
@@ -122,5 +122,9 @@ public class MalhaView {
 
     public void exibirMensagemFinal(boolean exibir) {
         mensagemFinal.setVisible(exibir);
+    }
+
+    public void setMalha(MalhaViaria malha) {
+        this.malha = malha;
     }
 }
