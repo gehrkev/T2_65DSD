@@ -7,6 +7,7 @@ import javafx.application.Platform;
 
 import java.util.*;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 
 public class SimulacaoController {
 
@@ -106,9 +107,8 @@ public class SimulacaoController {
                         if (getNumeroCarrosAtivos() < limite) {
                             Platform.runLater(() -> {
                                 try {
-                                    int entradaIndex = (int) (Math.random() *
-                                            malhaController.getPontosDeEntrada().size());
-                                    Carro carro = criarNovoCarro(entradaIndex);
+
+                                    Carro carro = criarNovoCarro();
 
                                     if (carro != null) {
                                         adicionarCarro(carro);
@@ -224,32 +224,45 @@ public class SimulacaoController {
         System.out.println("Simulação encerrada!");
     }
 
-    private Carro criarNovoCarro(int entradaIndex) {
-        Quadrante entrada = malhaController.getPontosDeEntrada().get(entradaIndex);
+    private Carro criarNovoCarro() {
         Random rand = new Random();
-        long velocidadeAleatoria = 200 + rand.nextInt(801);
+        List<Quadrante> entradas = malhaController.getPontosDeEntrada();
 
-        String nomeUnico = String.format("Carro-%d-%d",
-                System.currentTimeMillis(),
-                rand.nextInt(1000));
+        for (int tentativa = 0; tentativa < 10; tentativa++) {
+            int entradaIndex = rand.nextInt(entradas.size());
+            Quadrante entrada = entradas.get(entradaIndex);
 
-        Carro carro = new Carro(entrada, velocidadeAleatoria, malhaView);
-        carro.setName(nomeUnico);
+            if (entrada.getCarro() != null) {
+                continue;
+            }
 
-        try {
-            entrada.getSemaforo().acquire();
-            entrada.setCarro(carro);
-            entrada.setQuadranteDoCarro();
+            long velocidadeAleatoria = 400 + rand.nextInt(801);
+            String nomeUnico = String.format("Carro-%d-%d",
+                    System.currentTimeMillis(),
+                    rand.nextInt(1000));
 
-            Platform.runLater(() -> {
-                malhaView.atualizarQuadrante(entrada);
-            });
+            Carro carro = new Carro(entrada, velocidadeAleatoria, malhaView);
+            carro.setName(nomeUnico);
 
-            return carro;
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            System.out.println("Não foi possível criar novo carro: " + e.getMessage());
-            return null;
+            try {
+                if (entrada.getSemaforo().tryAcquire(100, TimeUnit.MILLISECONDS)) {
+                    entrada.setCarro(carro);
+                    entrada.setQuadranteDoCarro();
+
+                    Platform.runLater(() -> malhaView.atualizarQuadrante(entrada));
+                    return carro;
+                } else {
+                    System.out.println("Semáforo ocupado em " + entrada + ", tentando nova entrada...");
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                System.out.println("Criação de carro interrompida: " + e.getMessage());
+                return null;
+            }
         }
+
+        System.out.println("Não foi possível criar novo carro após várias tentativas.");
+        return null;
     }
+
 }

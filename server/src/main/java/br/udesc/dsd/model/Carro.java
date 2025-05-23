@@ -253,7 +253,7 @@ public class Carro extends Thread {
             Platform.runLater(() -> malhaView.atualizarQuadrantes(atual, proximo));
             System.out.println(getName() + ": Moveu para " + proximo + " no cruzamento.");
 
-            Thread.sleep(velocidade / 2);
+            Thread.sleep(velocidade);
         }
         segurandoSemaforo = true;
     }
