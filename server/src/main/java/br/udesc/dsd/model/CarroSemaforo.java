@@ -9,7 +9,7 @@ import javafx.scene.paint.Color;
 
 public class CarroSemaforo extends Thread implements ICarro {
     private Quadrante quadranteAtual;
-    private long velocidade; // thread sleep para movimentação entre quadrantes
+    private final long velocidade; // thread sleep para movimentação entre quadrantes
     private final MalhaView malhaView;
     private final Color cor;
     private static final Color[] CORES_DISPONIVEIS = {
@@ -34,7 +34,7 @@ public class CarroSemaforo extends Thread implements ICarro {
     @Override
     public void run() {
         try {
-            Platform.runLater(() -> malhaView.atualizarQuadrante(quadranteAtual));
+            Thread.sleep(500); // Para garantir que o Platfor.runLater do controller irá atualizar a view
 
             // Já temos o semaforo para o primeiro quadrante
             // (adquirido em SimulacaoController.criarNovoCarro)

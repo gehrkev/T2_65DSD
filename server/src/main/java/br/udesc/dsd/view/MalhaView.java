@@ -94,7 +94,7 @@ public class MalhaView {
     }
 
     private VBox construirPainelControles() {
-        limiteVeiculosSpinner = new Spinner<>(1, 100, 10);
+        limiteVeiculosSpinner = new Spinner<>(1, 500, 10);
         intervaloSpinner = new Spinner<>(100, 5000, 1000, 100);
         limiteVeiculosSpinner.setEditable(true);
         intervaloSpinner.setEditable(true);

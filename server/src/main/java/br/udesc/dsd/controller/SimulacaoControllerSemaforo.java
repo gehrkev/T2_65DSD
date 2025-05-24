@@ -242,6 +242,7 @@ public class SimulacaoControllerSemaforo implements ISimulacaoController {
                     entrada.setQuadranteDoCarro();
 
                     Platform.runLater(() -> malhaView.atualizarQuadrante(entrada));
+
                     return carro;
                 }
             } catch (InterruptedException e) {
