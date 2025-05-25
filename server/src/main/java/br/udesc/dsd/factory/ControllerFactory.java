@@ -10,7 +10,7 @@ public class ControllerFactory {
             boolean usarMonitor) {
 
         if (usarMonitor) {
-            throw new UnsupportedOperationException("Monitor ainda não implementado");
+            return new SimulacaoControllerMonitor(malhaController, malhaView);
         } else {
             return new SimulacaoControllerSemaforo(malhaController, malhaView);
         }
