@@ -26,148 +26,226 @@ public class CarroMonitor extends Thread implements ICarro {
         this.velocidade = velocidade;
         this.malhaView = malhaView;
         this.cor = CORES_DISPONIVEIS[rand.nextInt(CORES_DISPONIVEIS.length)];
-        this.setName("Carro-" + System.currentTimeMillis());
+        this.setName("Carro-" + System.currentTimeMillis() + "-" + rand.nextInt(1000));
+        if (quadranteInicial != null) {
+            synchronized (quadranteInicial) {
+                quadranteInicial.setCarro(this);
+            }
+        }
     }
 
     @Override
     public void run() {
         try {
-            Thread.sleep(500); // Para dar tempo da interface atualizar
+            Thread.sleep(500 + rand.nextInt(500));
 
             while (ativo && !shutdownRequested) {
                 Quadrante atual = this.quadranteAtual;
+                if (atual == null) {
+                    System.out.println(getName() + " está sem quadrante atual. Encerrando.");
+                    break;
+                }
                 Direcao direcao = atual.getDirecao();
 
                 Quadrante proximo = atual.getVizinho(direcao);
-                if (proximo == null) {
-                    System.out.println(getName() + " saiu da malha. Encerrando thread.");
-                    break;
-                }
 
-                boolean entrandoEmCruzamento = !isCruzamento(atual.getDirecao()) && isCruzamento(proximo.getDirecao());
+                boolean entrandoEmCruzamento = !isCruzamento(atual.getDirecao()) && proximo != null && isCruzamento(proximo.getDirecao());
 
                 if (entrandoEmCruzamento) {
-                    List<Quadrante> saidasPossiveis = coletarSaidasPossiveis(atual);
+                    System.out.println(getName() + " em " + atual + " tentando entrar no cruzamento via " + proximo);
+                    List<Quadrante> saidasPossiveis = coletarSaidasPossiveis(proximo);
 
                     if (saidasPossiveis.isEmpty()) {
-                        Thread.sleep(rand.nextInt(500));
+                        System.out.println(getName() + " não encontrou saídas possíveis do cruzamento " + proximo + ". Aguardando.");
+                        Thread.sleep(velocidade + rand.nextInt(250));
                         continue;
                     }
 
                     Quadrante saidaEscolhida = saidasPossiveis.get(rand.nextInt(saidasPossiveis.size()));
-                    List<Quadrante> caminho = encontrarCaminhoParaSaida(atual, saidaEscolhida);
+                    System.out.println(getName() + " escolheu sair por " + saidaEscolhida);
 
-                    if (caminho.isEmpty()) {
-                        Thread.sleep(rand.nextInt(500));
-                        continue;
+                    List<Quadrante> caminhoNoCruzamento = encontrarCaminhoParaSaida(proximo, saidaEscolhida);
+
+                    if (caminhoNoCruzamento.isEmpty() || caminhoNoCruzamento.get(0) != proximo) {
+                        if (caminhoNoCruzamento.isEmpty() || (proximo != null && !caminhoNoCruzamento.contains(proximo))) {
+                            List<Quadrante> tempPath = new ArrayList<>();
+                            if (proximo != null) tempPath.add(proximo);
+                            tempPath.addAll(caminhoNoCruzamento);
+                            caminhoNoCruzamento = tempPath;
+                        }
+                        if (caminhoNoCruzamento.isEmpty()) {
+                            System.out.println(getName() + " não encontrou caminho para " + saidaEscolhida + " a partir de " + proximo + ". Aguardando.");
+                            Thread.sleep(velocidade + rand.nextInt(250));
+                            continue;
+                        }
                     }
 
-                    if (reservarCaminhoMonitor(caminho)) {
-                        atravessarCruzamentoMonitor(caminho);
+                    System.out.println(getName() + " caminho no cruzamento: " + caminhoNoCruzamento);
+
+                    if (reservarCaminho(caminhoNoCruzamento)) {
+                        System.out.println(getName() + " reservou com sucesso o caminho: " + caminhoNoCruzamento);
+                        atravessarCruzamento(caminhoNoCruzamento);
+                        System.out.println(getName() + " atravessou o cruzamento. Agora em: " + this.quadranteAtual);
                     } else {
-                        Thread.sleep(rand.nextInt(500));
+                        System.out.println(getName() + " falhou ao reservar caminho " + caminhoNoCruzamento + ". Tentando novamente mais tarde.");
+                        Thread.sleep(velocidade + rand.nextInt(250));
                     }
                 } else {
-                    if (moverParaQuadranteMonitor(proximo)) {
-                        System.out.println(getName() + " movido para: " + proximo);
+                    if (proximo == null) {
+                        System.out.println(getName() + " em " + atual + " saiu da malha. Encerrando thread.");
+                        ativo = false;
+                        break;
+                    }
+                    if (!moverParaQuadrante(proximo)) {
+                        System.out.println(getName() + " não conseguiu mover de " + atual + " para " + proximo + ". Aguardando.");
+                        Thread.sleep(velocidade + rand.nextInt(150));
                     } else {
-                        Thread.sleep(rand.nextInt(500));
+                        System.out.println(getName() + " movido de " + atual + " para " + proximo);
+                        Thread.sleep(velocidade);
                     }
                 }
-
-                Thread.sleep(velocidade);
             }
         } catch (InterruptedException e) {
             if (!shutdownRequested) {
                 System.out.println(getName() + " interrompido inesperadamente.");
+                Thread.currentThread().interrupt();
+            } else {
+                System.out.println(getName() + " interrompido para shutdown.");
             }
-        } finally {
+        } catch (Exception e) {
+            System.err.println(getName() + " encontrou uma exceção inesperada: " + e.getMessage());
+            e.printStackTrace();
+        }
+        finally {
             cleanup();
         }
 
-        if (onTermino != null) onTermino.run();
-    }
-
-    private boolean moverParaQuadranteMonitor(Quadrante proximo) throws InterruptedException {
-        synchronized (proximo) {
-            while (proximo.getCarro() != null) {
-                proximo.wait();
-            }
-            Quadrante atual = this.quadranteAtual;
-
-            synchronized (atual) {
-                atual.setCarro(null);
-                proximo.setCarro(this);
-                this.quadranteAtual = proximo;
-                atual.notifyAll();
-            }
-
-            Platform.runLater(() -> malhaView.atualizarQuadrantes(atual, proximo));
-            return true;
-        }
-    }
-
-    private boolean reservarCaminhoMonitor(List<Quadrante> caminho) throws InterruptedException {
-        List<Quadrante> ordenados = new ArrayList<>(caminho);
-        ordenados.sort(Comparator.comparingInt(Object::hashCode));
-
-        while (true) {
-            List<Quadrante> adquiridos = new ArrayList<>();
-
+        if (onTermino != null) {
             try {
-                for (Quadrante q : ordenados) {
-                    synchronized (q) {
-                        adquiridos.add(q);
-                        if (q.getCarro() != null) {
-                            break;
-                        }
-                    }
-                }
-
-                if (adquiridos.size() == ordenados.size()) {
-                    return true;
-                }
-            } finally {
-                for (Quadrante q : adquiridos) {
-                    synchronized (q) {
-                        q.notifyAll();
-                    }
-                }
+                onTermino.run();
+            } catch (Exception e){
+                System.err.println(getName() + " exceção no callback onTermino: " + e.getMessage());
             }
-
-            Thread.sleep(50 + rand.nextInt(100));
         }
+        System.out.println(getName() + " thread finalizada.");
     }
 
-    private void atravessarCruzamentoMonitor(List<Quadrante> caminho) throws InterruptedException {
-        for (int i = 0; i < caminho.size(); i++) {
-            Quadrante proximo = caminho.get(i);
-            Quadrante atual = this.quadranteAtual;
+    /**
+     * Move o carro para o próximo quadrante.
+     * Este método usa ordenação de locks e não usa wait() enquanto mantém múltiplos locks.
+     * Retorna false se não conseguir adquirir o lock ou se o próximo quadrante estiver ocupado.
+     */
+    private boolean moverParaQuadrante(Quadrante proximo) throws InterruptedException {
+        Quadrante atual = this.quadranteAtual;
+        if (atual == proximo) return true;
 
-            Object primeiroLock = atual.hashCode() < proximo.hashCode() ? atual : proximo;
-            Object segundoLock = atual.hashCode() < proximo.hashCode() ? proximo : atual;
+        Object lock1 = System.identityHashCode(atual) < System.identityHashCode(proximo) ? atual : proximo;
+        Object lock2 = System.identityHashCode(atual) < System.identityHashCode(proximo) ? proximo : atual;
 
-            synchronized (primeiroLock) {
-                synchronized (segundoLock) {
-                    while (proximo.getCarro() != null) {
-                        proximo.wait();
+        synchronized (lock1) {
+            if (shutdownRequested) return false;
+            synchronized (lock2) {
+                if (shutdownRequested) return false;
+
+                if (proximo.getCarro() == null || proximo.getCarro() == this) {
+                    if (this.quadranteAtual == atual) {
+                        atual.setCarro(null);
+                    } else {
+                        System.err.println(getName() + " estado inconsistente em moverParaQuadrante: quadranteAtual mudou.");
+                        return false;
                     }
 
-                    atual.setCarro(null);
                     proximo.setCarro(this);
                     this.quadranteAtual = proximo;
 
                     atual.notifyAll();
-                    proximo.notifyAll();
+
+                    final Quadrante finalAtual = atual;
+                    final Quadrante finalProximo = proximo;
+                    Platform.runLater(() -> malhaView.atualizarQuadrantes(finalAtual, finalProximo));
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+        }
+    }
+
+    /**
+     * "Reserva" um caminho verificando se todos os quadrantes estão livres.
+     * Este método adquire locks em uma ordem definida (hashCode) para verificar.
+     * IMPORTANTE: NÃO mantém os locks após retornar true. O caminho pode ser tomado por outros.
+     * É mais uma verificação "o caminho está livre agora?".
+     */
+    private boolean reservarCaminho(List<Quadrante> caminho) throws InterruptedException {
+        if (caminho == null || caminho.isEmpty()) {
+            return false;
+        }
+        List<Quadrante> ordenados = new ArrayList<>(caminho);
+        ordenados.sort(Comparator.comparingInt(System::identityHashCode));
+
+        List<Quadrante> locksTemporariamenteAdquiridos = new ArrayList<>();
+        try {
+            for (Quadrante q : ordenados) {
+                if (shutdownRequested) return false;
+                synchronized (q) {
+                    locksTemporariamenteAdquiridos.add(q);
+                    if (q.getCarro() != null && q.getCarro() != this) {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        } finally {
+            for (Quadrante qLock : locksTemporariamenteAdquiridos) {
+                if (shutdownRequested) break;
+                synchronized(qLock) {
+                    qLock.notifyAll();
+                }
+            }
+        }
+    }
+
+    /**
+     * Percorre um caminho pré-determinado, tipicamente num cruzamento.
+     * Tenta mover passo-a-passo, tentando novamente se um segmento estiver bloqueado.
+     */
+    private void atravessarCruzamento(List<Quadrante> caminho) throws InterruptedException {
+        if (caminho == null) return;
+
+        for (Quadrante proximoPasso : caminho) {
+            if (shutdownRequested) break;
+            if (this.quadranteAtual == proximoPasso) {
+                System.out.println(getName() + " já está em " + proximoPasso + " no caminho do cruzamento.");
+                Thread.sleep(velocidade);
+                continue;
+            }
+
+            boolean movidoComSucesso = false;
+            int tentativas = 0;
+            int maxTentativas = 50;
+
+            while (!movidoComSucesso && !shutdownRequested && tentativas < maxTentativas) {
+                if (moverParaQuadrante(proximoPasso)) {
+                    movidoComSucesso = true;
+                    System.out.println(getName() + " atravessando cruzamento, movido para: " + proximoPasso);
+                    Thread.sleep(velocidade);
+                } else {
+                    tentativas++;
+                    Thread.sleep(50 + rand.nextInt(100));
                 }
             }
 
-            Platform.runLater(() -> malhaView.atualizarQuadrantes(atual, proximo));
-            Thread.sleep(velocidade);
+            if (!movidoComSucesso && !shutdownRequested) {
+                System.out.println(getName() + " falhou em mover para " + proximoPasso + " no cruzamento após " + maxTentativas + " tentativas. Saindo do cruzamento.");
+                break;
+            }
+            if (shutdownRequested) break;
         }
     }
 
     private boolean isCruzamento(Direcao direcao) {
+        if (direcao == null) return false;
         return direcao == Direcao.CRUZAMENTO_CIMA ||
                 direcao == Direcao.CRUZAMENTO_BAIXO ||
                 direcao == Direcao.CRUZAMENTO_ESQUERDA ||
@@ -178,18 +256,19 @@ public class CarroMonitor extends Thread implements ICarro {
                 direcao == Direcao.CRUZAMENTO_BAIXO_E_ESQUERDA;
     }
 
-    private List<Quadrante> coletarSaidasPossiveis(Quadrante entrada) {
+    private List<Quadrante> coletarSaidasPossiveis(Quadrante entradaCruzamento) {
         List<Quadrante> saidas = new ArrayList<>();
+        if (entradaCruzamento == null || !isCruzamento(entradaCruzamento.getDirecao())) {
+            return saidas;
+        }
+
         Set<Quadrante> visitados = new HashSet<>();
         Queue<Quadrante> fila = new LinkedList<>();
 
-        Quadrante inicio = entrada.getVizinho(entrada.getDirecao());
-        if (inicio == null) return saidas;
+        fila.add(entradaCruzamento);
+        visitados.add(entradaCruzamento);
 
-        fila.add(inicio);
-        visitados.add(inicio);
-
-        while (!fila.isEmpty()) {
+        while (!fila.isEmpty() && !shutdownRequested) {
             Quadrante atual = fila.poll();
 
             for (Direcao d : atual.getDirecoesPossiveis()) {
@@ -205,72 +284,107 @@ public class CarroMonitor extends Thread implements ICarro {
                 }
             }
         }
-
         return saidas;
     }
 
-    private List<Quadrante> encontrarCaminhoParaSaida(Quadrante entrada, Quadrante saidaAlvo) {
+    private List<Quadrante> encontrarCaminhoParaSaida(Quadrante inicioCruzamento, Quadrante saidaAlvo) {
         List<Quadrante> caminho = new ArrayList<>();
+        if (inicioCruzamento == null || saidaAlvo == null || !isCruzamento(inicioCruzamento.getDirecao())) {
+            return caminho;
+        }
+
         Set<Quadrante> visitados = new HashSet<>();
         Queue<Quadrante> fila = new LinkedList<>();
         Map<Quadrante, Quadrante> veioDe = new HashMap<>();
 
-        Quadrante inicio = entrada.getVizinho(entrada.getDirecao());
-        if (inicio == null) return caminho;
+        fila.add(inicioCruzamento);
+        visitados.add(inicioCruzamento);
+        veioDe.put(inicioCruzamento, null);
 
-        fila.add(inicio);
-        visitados.add(inicio);
-        veioDe.put(inicio, null);
+        Quadrante encontrado = null;
 
-        boolean encontrouSaida = false;
-
-        while (!fila.isEmpty() && !encontrouSaida) {
+        while (!fila.isEmpty() && !shutdownRequested) {
             Quadrante atual = fila.poll();
+
+            if (atual == saidaAlvo) {
+                encontrado = atual;
+                break;
+            }
+
+            if (!isCruzamento(atual.getDirecao()) && atual != saidaAlvo) {
+                continue;
+            }
 
             for (Direcao d : atual.getDirecoesPossiveis()) {
                 Quadrante vizinho = atual.getVizinho(d);
                 if (vizinho == null || visitados.contains(vizinho)) continue;
 
-                visitados.add(vizinho);
-                veioDe.put(vizinho, atual);
-
-                if (vizinho == saidaAlvo) {
-                    encontrouSaida = true;
-                    break;
+                if (!isCruzamento(vizinho.getDirecao()) && vizinho != saidaAlvo) {
+                    visitados.add(vizinho);
+                    veioDe.put(vizinho, atual);
+                    if (vizinho == saidaAlvo) {
+                        encontrado = vizinho;
+                        break;
+                    }
+                    continue;
                 }
 
-                if (isCruzamento(vizinho.getDirecao())) {
-                    fila.add(vizinho);
+                visitados.add(vizinho);
+                veioDe.put(vizinho, atual);
+                fila.add(vizinho);
+
+                if (vizinho == saidaAlvo) {
+                    encontrado = vizinho;
+                    break;
+                }
+            }
+            if (encontrado != null) break;
+        }
+
+        if (encontrado != null) {
+            Quadrante passo = encontrado;
+            while (passo != null) {
+                caminho.add(0, passo);
+                if (passo == inicioCruzamento) break;
+                passo = veioDe.get(passo);
+                if (passo != null && !visitados.contains(passo) && passo != inicioCruzamento) {
+                    System.err.println(getName() + ": Erro ao reconstruir caminho, loop ou nó não visitado.");
+                    return new ArrayList<>();
                 }
             }
         }
 
-        if (!encontrouSaida) return caminho;
-
-        Quadrante atual = saidaAlvo;
-        while (atual != null && veioDe.get(atual) != null) {
-            caminho.add(0, atual);
-            atual = veioDe.get(atual);
+        if (!caminho.isEmpty() && caminho.get(0) != inicioCruzamento && encontrado != null) {
+            if (inicioCruzamento == saidaAlvo) {
+                caminho.clear();
+                caminho.add(inicioCruzamento);
+            } else {
+                System.err.println(getName() + ": Caminho reconstruído não inicia com o quadrante de entrada do cruzamento.");
+            }
         }
-
-        if (atual != null) caminho.add(0, atual);
-
         return caminho;
     }
 
     private void cleanup() {
-        if (quadranteAtual != null) {
-            Quadrante ultimo = quadranteAtual;
-            synchronized (ultimo) {
-                ultimo.setCarro(null);
-                ultimo.notifyAll();
+        Quadrante ultimoQuadrante = this.quadranteAtual;
+        if (ultimoQuadrante != null) {
+            synchronized (ultimoQuadrante) {
+                if (ultimoQuadrante.getCarro() == this) {
+                    ultimoQuadrante.setCarro(null);
+                    ultimoQuadrante.notifyAll();
+                }
             }
-            Platform.runLater(() -> malhaView.atualizarQuadrante(ultimo));
+            final Quadrante finalUltimo = ultimoQuadrante;
+            Platform.runLater(() -> {
+                if (finalUltimo != null) malhaView.atualizarQuadrante(finalUltimo);
+            });
         }
-        System.out.println(getName() + " finalizou corretamente.");
+        this.quadranteAtual = null;
+        System.out.println(getName() + " cleanup executado.");
     }
 
     public void requestShutdown() {
+        System.out.println(getName() + " shutdown solicitado.");
         this.shutdownRequested = true;
         this.ativo = false;
         this.interrupt();
@@ -286,5 +400,9 @@ public class CarroMonitor extends Thread implements ICarro {
 
     public void setOnTermino(Runnable onTermino) {
         this.onTermino = onTermino;
+    }
+
+    public String getCarName() {
+        return getName();
     }
 }

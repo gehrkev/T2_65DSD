@@ -28,7 +28,7 @@ public class CarroSemaforo extends Thread implements ICarro {
         this.velocidade = velocidade;
         this.malhaView = malhaView;
         this.cor = CORES_DISPONIVEIS[rand.nextInt(CORES_DISPONIVEIS.length)];
-        this.setName("Carro-" + System.currentTimeMillis());
+        this.setName("Carro-" + System.currentTimeMillis() + "-" + rand.nextInt(1000));
     }
 
     @Override
