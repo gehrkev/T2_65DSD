@@ -34,10 +34,8 @@ public class CarroSemaforo extends Thread implements ICarro {
     @Override
     public void run() {
         try {
-            Thread.sleep(500); // Para garantir que o Platfor.runLater do controller irá atualizar a view
+            Thread.sleep(500);
 
-            // Já temos o semaforo para o primeiro quadrante
-            // (adquirido em SimulacaoController.criarNovoCarro)
             segurandoSemaforo = true;
 
             while (ativo && !shutdownRequested) {
@@ -100,27 +98,32 @@ public class CarroSemaforo extends Thread implements ICarro {
         if (onTermino != null) onTermino.run();
     }
 
-    private boolean moverParaQuadrante(Quadrante proximo) throws InterruptedException {
-        boolean acquired = proximo.getSemaforo().tryAcquire(500, TimeUnit.MILLISECONDS);
+    private boolean moverParaQuadrante(Quadrante proximo) {
+        try {
+            boolean acquired = proximo.getSemaforo().tryAcquire(500, TimeUnit.MILLISECONDS);
 
-        if (acquired) {
-            Quadrante atual = this.quadranteAtual;
+            if (acquired) {
+                Quadrante atual = this.quadranteAtual;
 
-            atual.setCarro(null);
-            this.quadranteAtual = proximo;
-            proximo.setCarro(this);
+                atual.setCarro(null);
+                this.quadranteAtual = proximo;
+                proximo.setCarro(this);
 
-            if (segurandoSemaforo) {
-                atual.getSemaforo().release();
+                if (segurandoSemaforo) {
+                    atual.getSemaforo().release();
+                }
+
+                segurandoSemaforo = true;
+
+                Platform.runLater(() -> malhaView.atualizarQuadrantes(atual, proximo));
+                return true;
             }
 
-            segurandoSemaforo = true;
-
-            Platform.runLater(() -> malhaView.atualizarQuadrantes(atual, proximo));
-            return true;
+            return false;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return false;
         }
-
-        return false;
     }
 
     private boolean isCruzamento(Direcao direcao) {
@@ -218,44 +221,53 @@ public class CarroSemaforo extends Thread implements ICarro {
         return caminho;
     }
 
-    private boolean reservarCaminho(List<Quadrante> caminho) throws InterruptedException {
-        List<Quadrante> adquiridos = new ArrayList<>();
+    private boolean reservarCaminho(List<Quadrante> caminho) {
+        try {
+            List<Quadrante> adquiridos = new ArrayList<>();
 
-        for (Quadrante q : caminho) {
-            boolean acquired = q.getSemaforo().tryAcquire(500, TimeUnit.MILLISECONDS);
-            if (!acquired) {
-                for (Quadrante aq : adquiridos) {
-                    aq.getSemaforo().release();
+            for (Quadrante q : caminho) {
+                boolean acquired = q.getSemaforo().tryAcquire(500, TimeUnit.MILLISECONDS);
+                if (!acquired) {
+                    for (Quadrante aq : adquiridos) {
+                        aq.getSemaforo().release();
+                    }
+                    return false;
                 }
-                return false;
+                adquiridos.add(q);
             }
-            adquiridos.add(q);
-        }
 
-        return true;
+            return true;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return false;
+        }
     }
 
-    private void atravessarCruzamento(List<Quadrante> caminho) throws InterruptedException {
-        for (int i = 0; i < caminho.size(); i++) {
-            Quadrante proximo = caminho.get(i);
-            Quadrante atual = this.quadranteAtual;
+    private void atravessarCruzamento(List<Quadrante> caminho) {
+        try {
+            for (int i = 0; i < caminho.size(); i++) {
+                Quadrante proximo = caminho.get(i);
+                Quadrante atual = this.quadranteAtual;
 
-            atual.setCarro(null);
-            this.quadranteAtual = proximo;
-            proximo.setCarro(this);
+                atual.setCarro(null);
+                this.quadranteAtual = proximo;
+                proximo.setCarro(this);
 
-            if (i == 0 && segurandoSemaforo) {
-                atual.getSemaforo().release();
-            } else if (i > 0) {
-                caminho.get(i - 1).getSemaforo().release();
+                if (i == 0 && segurandoSemaforo) {
+                    atual.getSemaforo().release();
+                } else if (i > 0) {
+                    caminho.get(i - 1).getSemaforo().release();
+                }
+
+                Platform.runLater(() -> malhaView.atualizarQuadrantes(atual, proximo));
+                System.out.println(getName() + ": Moveu para " + proximo + " no cruzamento.");
+
+                Thread.sleep(velocidade);
             }
-
-            Platform.runLater(() -> malhaView.atualizarQuadrantes(atual, proximo));
-            System.out.println(getName() + ": Moveu para " + proximo + " no cruzamento.");
-
-            Thread.sleep(velocidade);
+            segurandoSemaforo = true;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
-        segurandoSemaforo = true;
     }
 
     private void cleanup() {

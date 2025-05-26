@@ -135,7 +135,7 @@ public class CarroMonitor extends Thread implements ICarro {
      * Este método usa ordenação de locks e não usa wait() enquanto mantém múltiplos locks.
      * Retorna false se não conseguir adquirir o lock ou se o próximo quadrante estiver ocupado.
      */
-    private boolean moverParaQuadrante(Quadrante proximo) throws InterruptedException {
+    private boolean moverParaQuadrante(Quadrante proximo) {
         Quadrante atual = this.quadranteAtual;
         if (atual == proximo) return true;
 
@@ -177,7 +177,7 @@ public class CarroMonitor extends Thread implements ICarro {
      * IMPORTANTE: NÃO mantém os locks após retornar true. O caminho pode ser tomado por outros.
      * É mais uma verificação "o caminho está livre agora?".
      */
-    private boolean reservarCaminho(List<Quadrante> caminho) throws InterruptedException {
+    private boolean reservarCaminho(List<Quadrante> caminho) {
         if (caminho == null || caminho.isEmpty()) {
             return false;
         }
@@ -210,39 +210,45 @@ public class CarroMonitor extends Thread implements ICarro {
      * Percorre um caminho pré-determinado, tipicamente num cruzamento.
      * Tenta mover passo-a-passo, tentando novamente se um segmento estiver bloqueado.
      */
-    private void atravessarCruzamento(List<Quadrante> caminho) throws InterruptedException {
-        if (caminho == null) return;
+    private void atravessarCruzamento(List<Quadrante> caminho) {
+        try {
+            if (caminho == null) return;
 
-        for (Quadrante proximoPasso : caminho) {
-            if (shutdownRequested) break;
-            if (this.quadranteAtual == proximoPasso) {
-                System.out.println(getName() + " já está em " + proximoPasso + " no caminho do cruzamento.");
-                Thread.sleep(velocidade);
-                continue;
-            }
-
-            boolean movidoComSucesso = false;
-            int tentativas = 0;
-            int maxTentativas = 50;
-
-            while (!movidoComSucesso && !shutdownRequested && tentativas < maxTentativas) {
-                if (moverParaQuadrante(proximoPasso)) {
-                    movidoComSucesso = true;
-                    System.out.println(getName() + " atravessando cruzamento, movido para: " + proximoPasso);
+            for (Quadrante proximoPasso : caminho) {
+                if (shutdownRequested) break;
+                if (this.quadranteAtual == proximoPasso) {
+                    System.out.println(getName() + " já está em " + proximoPasso + " no caminho do cruzamento.");
                     Thread.sleep(velocidade);
-                } else {
-                    tentativas++;
-                    Thread.sleep(50 + rand.nextInt(100));
+                    continue;
                 }
-            }
 
-            if (!movidoComSucesso && !shutdownRequested) {
-                System.out.println(getName() + " falhou em mover para " + proximoPasso + " no cruzamento após " + maxTentativas + " tentativas. Saindo do cruzamento.");
-                break;
+                boolean movidoComSucesso = false;
+                int tentativas = 0;
+                int maxTentativas = 50;
+
+                while (!movidoComSucesso && !shutdownRequested && tentativas < maxTentativas) {
+                    if (moverParaQuadrante(proximoPasso)) {
+                        movidoComSucesso = true;
+                        System.out.println(getName() + " atravessando cruzamento, movido para: " + proximoPasso);
+                        Thread.sleep(velocidade);
+                    } else {
+                        tentativas++;
+                        Thread.sleep(50 + rand.nextInt(100));
+                    }
+                }
+
+                if (!movidoComSucesso && !shutdownRequested) {
+                    System.out.println(getName() + " falhou em mover para " + proximoPasso + " no cruzamento após " + maxTentativas + " tentativas. Saindo do cruzamento.");
+                    break;
+                }
+                if (shutdownRequested) break;
             }
-            if (shutdownRequested) break;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
     }
+
+
 
     private boolean isCruzamento(Direcao direcao) {
         if (direcao == null) return false;
