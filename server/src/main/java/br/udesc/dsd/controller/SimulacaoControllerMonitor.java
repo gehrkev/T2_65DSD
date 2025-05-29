@@ -168,8 +168,7 @@ public class SimulacaoControllerMonitor implements ISimulacaoController {
             synchronized (entrada) {
                 if (entrada.getCarro() != null) continue;
 
-                //long velocidadeAleatoria = 400 + rand.nextInt(801);
-                long velocidadeAleatoria = 800 + rand.nextInt(401);
+                long velocidadeAleatoria = 500 + rand.nextInt(601);
                 String nomeUnico = String.format("Carro-%d-%d",
                         System.currentTimeMillis(),
                         rand.nextInt(1000));

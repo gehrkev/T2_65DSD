@@ -230,7 +230,7 @@ public class SimulacaoControllerSemaforo implements ISimulacaoController {
 
             try {
                 if (entrada.getSemaforo().tryAcquire(100, TimeUnit.MILLISECONDS)) {
-                    long velocidadeAleatoria = 400 + rand.nextInt(801);
+                    long velocidadeAleatoria = 500 + rand.nextInt(601);
                     String nomeUnico = String.format("Carro-%d-%d",
                             System.currentTimeMillis(),
                             rand.nextInt(1000));
