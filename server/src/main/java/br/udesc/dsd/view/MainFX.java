@@ -50,18 +50,23 @@ public class MainFX extends Application {
                     return;
                 }
 
-                caminhoArquivo = getClass().getClassLoader().getResource(arquivoSelecionado).getPath();
-                malhaController = new MalhaController(caminhoArquivo);
-
                 try {
+                    malhaController = new MalhaController(arquivoSelecionado);
+
+                    if (malhaController.getMalha() == null) {
+                        exibirAlerta("Erro", "Não foi possível carregar a malha");
+                        return;
+                    }
+
                     malhaView.inicializarMalha(malhaController.getMalha());
 
                     ISimulacaoController novoController = ControllerFactory
                             .criarSimulacaoController(malhaController, malhaView, usarMonitor);
                     controllerAtual = novoController;
                     controllerAtual.iniciarSimulacao();
-                } catch (UnsupportedOperationException ex) {
-                    System.err.println("Erro ao criar controller: " + ex.getMessage());
+
+                } catch (Exception ex) {
+                    exibirAlerta("Erro", "Erro ao carregar malha: " + ex.getMessage());
                     controllerAtual = null;
                 }
             });
@@ -85,7 +90,6 @@ public class MainFX extends Application {
         malhaView.monitorRadio.setOnAction(e -> usarMonitor = true);
         malhaView.semaforoRadio.setOnAction(e -> usarMonitor = false);
     }
-
 
     private void exibirAlerta(String titulo, String mensagem) {
         Alert alert = new Alert(Alert.AlertType.WARNING);

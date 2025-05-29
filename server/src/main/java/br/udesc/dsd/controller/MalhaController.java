@@ -4,9 +4,7 @@ import br.udesc.dsd.model.Direcao;
 import br.udesc.dsd.model.MalhaViaria;
 import br.udesc.dsd.model.Quadrante;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,7 +18,21 @@ public class MalhaController {
     }
 
     private MalhaViaria carregarDeArquivo(String caminhoArquivo) {
-        try (BufferedReader leitor = new BufferedReader(new FileReader(caminhoArquivo))) {
+        BufferedReader leitor = null;
+
+        try {
+            File arquivo = new File(caminhoArquivo);
+            if (arquivo.exists()) {
+                leitor = new BufferedReader(new FileReader(arquivo));
+            } else {
+                InputStream is = getClass().getClassLoader().getResourceAsStream(caminhoArquivo);
+                if (is != null) {
+                    leitor = new BufferedReader(new InputStreamReader(is));
+                } else {
+                    throw new IOException("Arquivo não encontrado: " + caminhoArquivo);
+                }
+            }
+
             int linhas = Integer.parseInt(leitor.readLine().trim());
             int colunas = Integer.parseInt(leitor.readLine().trim());
 
@@ -28,7 +40,7 @@ public class MalhaController {
 
             for (int i = 0; i < linhas; i++) {
                 String linha = leitor.readLine();
-                if (linha == null) break;
+                if (linha == null) continue;
 
                 String[] valores = linha.split("\t");
                 for (int j = 0; j < Math.min(valores.length, colunas); j++) {
@@ -40,12 +52,20 @@ public class MalhaController {
             estabelecerPontosEntrada();
             estabelecerConexoes();
 
-            leitor.close();
             return malha;
-        } catch (IOException e) {
+
+        } catch (IOException | NumberFormatException e) {
             e.printStackTrace();
-            System.out.println("Erro ao carregar arquivo");
+            System.out.println("Erro ao carregar arquivo: " + e.getMessage());
+        } finally {
+            if (leitor != null) {
+                try {
+                    leitor.close();
+                } catch (IOException e) {
+                }
+            }
         }
+
         return null;
     }
 

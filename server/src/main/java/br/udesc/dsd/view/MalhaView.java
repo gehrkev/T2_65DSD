@@ -8,10 +8,8 @@ import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 
-import java.io.File;
-import java.net.URL;
+import java.io.InputStream;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class MalhaView {
 
@@ -78,31 +76,29 @@ public class MalhaView {
     }
 
     private void carregarMalhasDisponiveis() {
-        try {
-            ClassLoader classLoader = getClass().getClassLoader();
-            Enumeration<URL> resources = classLoader.getResources("malhas");
-            Set<String> arquivosTxt = new HashSet<>();
+        List<String> arquivos = Arrays.asList(
+                "malha-exemplo-1.txt",
+                "malha-exemplo-2.txt",
+                "malha-exemplo-3.txt"
+        );
 
-            while (resources.hasMoreElements()) {
-                URL resource = resources.nextElement();
-                File dir = new File(resource.toURI());
-                if (dir.isDirectory()) {
-                    File[] files = dir.listFiles((d, name) -> name.endsWith(".txt"));
-                    if (files != null) {
-                        for (File file : files) {
-                            arquivosTxt.add(file.getName());
-                        }
-                    }
-                }
-            }
+        List<String> arquivosEncontrados = new ArrayList<>();
 
-            List<String> listaOrdenada = arquivosTxt.stream().sorted().collect(Collectors.toList());
-            comboBoxMalhas.getItems().addAll(listaOrdenada);
-            if (!listaOrdenada.isEmpty()) {
-                comboBoxMalhas.getSelectionModel().selectFirst();
+        for (String arquivo : arquivos) {
+            InputStream is = getClass().getClassLoader().getResourceAsStream(arquivo);
+            if (is != null) {
+                arquivosEncontrados.add(arquivo);
+                try { is.close(); } catch (Exception e) {}
             }
-        } catch (Exception e) {
-            e.printStackTrace();
+        }
+
+        if (arquivosEncontrados.isEmpty()) {
+            arquivosEncontrados.addAll(arquivos);
+        }
+
+        comboBoxMalhas.getItems().addAll(arquivosEncontrados);
+        if (!arquivosEncontrados.isEmpty()) {
+            comboBoxMalhas.getSelectionModel().selectFirst();
         }
     }
 
