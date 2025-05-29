@@ -1,0 +1,280 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:138.0) Gecko/20100101 Firefox/138.0" version="27.1.1">
+  <diagram id="TrafficSimulator" name="Simulador de Tráfego">
+    <mxGraphModel grid="1" page="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" pageScale="1" pageWidth="1200" pageHeight="1600" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="2" value="«interface»&#xa;ISimulacaoController" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=40;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="430" y="140" width="200" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="3" value="+ iniciarSimulacao(): void&#xa;+ pararInsercao(): void&#xa;+ encerrarSimulacao(): void" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="2">
+          <mxGeometry y="40" width="200" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="12" value="MalhaController" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="400" y="440" width="450" height="250" as="geometry" />
+        </mxCell>
+        <mxCell id="13" value="- malha: MalhaViaria&#xa;- pontosDeEntrada: List&lt;Quadrante&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="12">
+          <mxGeometry y="26" width="450" height="34" as="geometry" />
+        </mxCell>
+        <mxCell id="14" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" vertex="1" parent="12">
+          <mxGeometry y="60" width="450" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="15" value="+ MalhaController(caminhoArquivo: String)&lt;br&gt;- carregarDeArquivo(caminho: String): MalhaViaria&lt;br&gt;- definirDirecaoQuadrante(linha: int, coluna: int, valor: int): void&lt;br&gt;&lt;div&gt;- estabelecerPontosEntrada(): void&lt;/div&gt;&lt;div&gt;- adicionarSeEntrada(q: Quadrante, direcaoEsperada: Direcao): void&lt;/div&gt;&lt;div&gt;- estabelecerConexoes(): void&lt;/div&gt;&lt;div&gt;- obterDirecoesPermitidas(direcao: Direcao): List&lt;/div&gt;&lt;div&gt;- encontrarVizinhoDaFrente(origem: Quadrante, direcao: Direcao): Quadrante&lt;/div&gt;&lt;div&gt;- coordenadaValida(linha: int, coluna: int): boolean&lt;/div&gt;&lt;div&gt;- criarChave(linha: int, coluna: int): String&lt;/div&gt;+ getMalha(): MalhaViaria&lt;br&gt;+ getPontosDeEntrada(): List" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="12">
+          <mxGeometry y="68" width="450" height="182" as="geometry" />
+        </mxCell>
+        <mxCell id="20" value="Quadrante" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="1015" y="130" width="300" height="200" as="geometry" />
+        </mxCell>
+        <mxCell id="21" value="- linha: int&lt;br&gt;- coluna: int&lt;br&gt;- direcao: Direcao&lt;br&gt;- carro: ICarro&lt;br&gt;- vizinhosDaFrente: Map&amp;lt;Direcao, Quadrante&amp;gt;&lt;br&gt;- semaforo: Semaphore" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="20">
+          <mxGeometry y="26" width="300" height="94" as="geometry" />
+        </mxCell>
+        <mxCell id="22" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" vertex="1" parent="20">
+          <mxGeometry y="120" width="300" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="23" value="+ adicionarVizinho(dir: Direcao, viz: Quadrante): void&lt;br&gt;&lt;div&gt;+ getVizinho(dir: Direcao): Quadrante&lt;/div&gt;&lt;div&gt;+ getDirecoesPossiveis(): Set&amp;lt;Direcao&amp;gt;&lt;/div&gt;&lt;div&gt;+ getters &amp;amp; setters&lt;/div&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="20">
+          <mxGeometry y="128" width="300" height="72" as="geometry" />
+        </mxCell>
+        <mxCell id="24" value="«interface»&#xa;ICarro" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=40;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="1190" y="390" width="240" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="25" value="+ start(): void&#xa;+ requestShutdown(): void&#xa;+ setOnTermino(callback: Runnable): void&#xa;+ getCor(): Color&#xa;+ getName(): String" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="24">
+          <mxGeometry y="40" width="240" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="34" value="«enumeration»&#xa;Direcao" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=40;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="910" y="390" width="240" height="190" as="geometry" />
+        </mxCell>
+        <mxCell id="35" value="NADA, CIMA, DIREITA, BAIXO,&#xa;ESQUERDA, CRUZAMENTO_CIMA,&#xa;CRUZAMENTO_DIREITA,&#xa;CRUZAMENTO_BAIXO,&#xa;CRUZAMENTO_ESQUERDA,&#xa;CRUZAMENTO_CIMA_E_DIREITA,&#xa;CRUZAMENTO_CIMA_E_ESQUERDA,&#xa;CRUZAMENTO_BAIXO_E_DIREITA,&#xa;CRUZAMENTO_BAIXO_E_ESQUERDA" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="34">
+          <mxGeometry y="40" width="240" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="36" value="MalhaView" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="320" width="250" height="380" as="geometry" />
+        </mxCell>
+        <mxCell id="37" value="- grid: GridPane&lt;br&gt;&lt;div&gt;- celulas: Map&lt;/div&gt;&lt;div&gt;- painelControles: VBox&lt;/div&gt;&lt;div&gt;- layoutPrincipal: HBox&lt;/div&gt;- malha: MalhaViaria&lt;br&gt;+ limiteVeiculosSpinner: Spinner&lt;br&gt;&lt;div&gt;+ intervaloSpinner: Spinner&lt;/div&gt;&lt;div&gt;+ iniciarBotao: Button&lt;/div&gt;&lt;div&gt;+ encerrarInsercaoBotao: Button&lt;/div&gt;&lt;div&gt;+ encerrarSimulacaoBotao: Button&lt;/div&gt;&lt;div&gt;+ monitorRadio: RadioButton&lt;/div&gt;&lt;div&gt;+ semaforoRadio: RadioButton&lt;/div&gt;&lt;div&gt;- mensagemFinal: Label&lt;/div&gt;&lt;div&gt;- stackPane: StackPane&lt;/div&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="36">
+          <mxGeometry y="26" width="250" height="214" as="geometry" />
+        </mxCell>
+        <mxCell id="38" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" vertex="1" parent="36">
+          <mxGeometry y="240" width="250" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="39" value="&lt;div&gt;+ MalhaView(malha: MalhaViaria)&lt;/div&gt;&lt;div&gt;- construirPainelControles(): VBox&lt;/div&gt;&lt;div&gt;- carregarMalhasDinsponivieis(): void&lt;/div&gt;&lt;div&gt;+ inicializarMalha(malha: MalhaViaria): void&lt;/div&gt;+ atualizarCelulas(): void&lt;br&gt;&lt;div&gt;+ atualizarQuadrante(q: Quadrante): void&lt;/div&gt;&lt;div&gt;+ getRoot(): Pane&lt;/div&gt;+ exibirMensagemFinal(exibir: boolean): void" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="36">
+          <mxGeometry y="248" width="250" height="132" as="geometry" />
+        </mxCell>
+        <mxCell id="40" value="ControllerFactory" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="530" y="20" width="710" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="41" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" vertex="1" parent="40">
+          <mxGeometry y="26" width="710" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="42" value="+ criarSimulacaoController(malhaController: MalhaController, malhaView: MalhaView, usarMonitor: boolean): ISimulacaoController" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="40">
+          <mxGeometry y="34" width="710" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="43" value="MainFX" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="40" width="290" height="190" as="geometry" />
+        </mxCell>
+        <mxCell id="44" value="- controllerAtual: ISimulacaoController&lt;br&gt;- malhaController: MalhaController&lt;br&gt;&lt;div&gt;- caminhoArquivo: String&lt;/div&gt;&lt;div&gt;- malhaView: MalhaView&lt;/div&gt;&lt;div&gt;- usarMonitor: boolean&lt;/div&gt;&lt;div&gt;- usarMonitor: boolean&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="43">
+          <mxGeometry y="26" width="290" height="94" as="geometry" />
+        </mxCell>
+        <mxCell id="45" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" vertex="1" parent="43">
+          <mxGeometry y="120" width="290" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="46" value="+ start(primaryStage: Stage): void&lt;br&gt;&lt;div&gt;- configurarBotoes(): void&lt;/div&gt;&lt;div&gt;- exibirAlerta(titulo: String, mensagem: String): void&lt;/div&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="43">
+          <mxGeometry y="128" width="290" height="62" as="geometry" />
+        </mxCell>
+        <mxCell id="51" value="" style="endArrow=open;endFill=1;endSize=12;html=1;rounded=0;" edge="1" parent="1" source="12" target="16">
+          <mxGeometry width="160" relative="1" as="geometry">
+            <mxPoint x="300" y="330" as="sourcePoint" />
+            <mxPoint x="340" y="330" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="53" value="" style="endArrow=open;endFill=1;endSize=12;html=1;rounded=0;" edge="1" parent="1" source="16" target="20">
+          <mxGeometry width="160" relative="1" as="geometry">
+            <mxPoint x="580" y="330" as="sourcePoint" />
+            <mxPoint x="620" y="330" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="55" value="" style="endArrow=open;endFill=1;endSize=12;html=1;rounded=0;" edge="1" parent="1" source="20" target="34">
+          <mxGeometry width="160" relative="1" as="geometry">
+            <mxPoint x="900" y="330" as="sourcePoint" />
+            <mxPoint x="920" y="330" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="56" value="" style="endArrow=open;endFill=1;endSize=12;html=1;rounded=0;" edge="1" parent="1" source="20" target="24">
+          <mxGeometry width="160" relative="1" as="geometry">
+            <mxPoint x="620" y="460" as="sourcePoint" />
+            <mxPoint x="220" y="520" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="68" value="" style="endArrow=open;endFill=1;endSize=12;html=1;rounded=0;" edge="1" parent="1" source="43" target="2">
+          <mxGeometry width="160" relative="1" as="geometry">
+            <mxPoint x="700" y="800" as="sourcePoint" />
+            <mxPoint x="220" y="120" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="69" value="" style="endArrow=open;endFill=1;endSize=12;html=1;rounded=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" edge="1" parent="1" source="46" target="12">
+          <mxGeometry width="160" relative="1" as="geometry">
+            <mxPoint x="280" y="160" as="sourcePoint" />
+            <mxPoint x="300" y="460" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="70" value="" style="endArrow=open;endFill=1;endSize=12;html=1;rounded=0;" edge="1" parent="1" source="43" target="36">
+          <mxGeometry width="160" relative="1" as="geometry">
+            <mxPoint x="700" y="840" as="sourcePoint" />
+            <mxPoint x="300" y="860" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="71" value="" style="endArrow=open;endFill=1;endSize=12;html=1;rounded=0;" edge="1" parent="1" source="43" target="40">
+          <mxGeometry width="160" relative="1" as="geometry">
+            <mxPoint x="700" y="820" as="sourcePoint" />
+            <mxPoint x="660" y="820" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="72" value="" style="endArrow=open;endFill=1;endSize=12;html=1;rounded=0;" edge="1" parent="1" source="36" target="16">
+          <mxGeometry width="160" relative="1" as="geometry">
+            <mxPoint x="300" y="780" as="sourcePoint" />
+            <mxPoint x="460" y="400" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="73" value="Monitor Pattern:&#xa;CarroMonitor usa&#xa;synchronized e wait/notify&#xa;para coordenação" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="1060" y="760" width="200" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="74" value="Semaphore Pattern:&#xa;CarroSemaforo usa&#xa;java.util.concurrent.Semaphore&#xa;para controle de acesso" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="50" y="760" width="200" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="75" value="Factory Pattern:&#xa;ControllerFactory decide&#xa;qual implementação&#xa;de ISimulacaoController criar" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="640" y="760" width="200" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="3jr2d5iBOoXw7JMaSQFl-75" value="" style="endArrow=open;endFill=1;endSize=12;html=1;rounded=0;dashed=1;" edge="1" parent="1" source="40" target="16">
+          <mxGeometry width="160" relative="1" as="geometry">
+            <mxPoint x="230" y="650" as="sourcePoint" />
+            <mxPoint x="610" y="230" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="16" value="MalhaViaria" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="700" y="130" width="280" height="180" as="geometry" />
+        </mxCell>
+        <mxCell id="17" value="- quadrantes: Map&amp;lt;String, Quadrante&amp;gt;&lt;br&gt;- linhas: int&lt;br&gt;- colunas: int" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="16">
+          <mxGeometry y="26" width="280" height="54" as="geometry" />
+        </mxCell>
+        <mxCell id="18" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" vertex="1" parent="16">
+          <mxGeometry y="80" width="280" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="19" value="&lt;div&gt;+ MalhaViaria(linhas: int, colunas: int)&lt;/div&gt;&lt;div&gt;- criarQuadrantes(linhas: int, colunas): void&lt;/div&gt;+ getQuadrante(linha: int, coluna: int): Quadrante&lt;br&gt;&lt;div&gt;+ getQuadrantes(): Map&amp;lt;String, Quadrante&amp;gt;&lt;/div&gt;&lt;div&gt;+ getLinhas(): int&lt;/div&gt;&lt;div&gt;+ getColunas(): int&lt;/div&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="16">
+          <mxGeometry y="88" width="280" height="92" as="geometry" />
+        </mxCell>
+        <mxCell id="3jr2d5iBOoXw7JMaSQFl-94" value="SimulacaoControllerMonitor" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="1060" y="860" width="380" height="230" as="geometry" />
+        </mxCell>
+        <mxCell id="3jr2d5iBOoXw7JMaSQFl-95" value="- malhaController: MalhaController&#xa;- malhaView: MalhaView&#xa;- threadInsercao: Thread&#xa;- carrosAtivos: List&lt;CarroMonitor&gt;&#xa;- insercaoAtiva: boolean" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="3jr2d5iBOoXw7JMaSQFl-94">
+          <mxGeometry y="26" width="380" height="74" as="geometry" />
+        </mxCell>
+        <mxCell id="3jr2d5iBOoXw7JMaSQFl-96" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" vertex="1" parent="3jr2d5iBOoXw7JMaSQFl-94">
+          <mxGeometry y="100" width="380" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="3jr2d5iBOoXw7JMaSQFl-97" value="&lt;div&gt;+ SimulacaoControllerMonitor(mc: MalhaController, mv: MalhaView)&lt;/div&gt;&lt;div&gt;- getNumeroCarrosAtivos(): int&lt;/div&gt;&lt;div&gt;- adicionarCarro(carro: CarroMonitor): boolean&lt;/div&gt;&lt;div&gt;- removerCarro(carro: CarroMonitor): boolean&lt;/div&gt;&lt;div&gt;+ iniciarSimulacao(): void&lt;/div&gt;+ pararInsercao(): void&lt;br&gt;+ encerrarSimulacao(): void&lt;br&gt;- criarNovoCarro(): CarroMonitor" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="3jr2d5iBOoXw7JMaSQFl-94">
+          <mxGeometry y="108" width="380" height="122" as="geometry" />
+        </mxCell>
+        <mxCell id="3jr2d5iBOoXw7JMaSQFl-98" value="SimulacaoControllerSemaforo" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="50" y="860" width="390" height="250" as="geometry" />
+        </mxCell>
+        <mxCell id="3jr2d5iBOoXw7JMaSQFl-99" value="- malhaController: MalhaController&#xa;- malhaView: MalhaView&#xa;- threadInsercao: Thread&#xa;- carrosAtivos: List&lt;CarroSemaforo&gt;&#xa;- semaforoListaCarros: Semaphore&#xa;- insercaoAtiva: boolean" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="3jr2d5iBOoXw7JMaSQFl-98">
+          <mxGeometry y="26" width="390" height="94" as="geometry" />
+        </mxCell>
+        <mxCell id="3jr2d5iBOoXw7JMaSQFl-100" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" vertex="1" parent="3jr2d5iBOoXw7JMaSQFl-98">
+          <mxGeometry y="120" width="390" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="3jr2d5iBOoXw7JMaSQFl-101" value="&lt;div&gt;+ SimulacaoControllerSemaforo(mc: MalhaController, mv: MalhaView)&lt;/div&gt;&lt;div&gt;- getNumeroCarrosAtivos(): int&lt;/div&gt;&lt;div&gt;- adicionarCarro(carro: CarroSemaforo): boolean&lt;/div&gt;&lt;div&gt;- removerCarro(carro: CarroSeMaforo): boolean&lt;/div&gt;&lt;div&gt;+ iniciarSimulacao(): void&lt;/div&gt;+ pararInsercao(): void&lt;br&gt;+ encerrarSimulacao(): void&lt;br&gt;- criarNovoCarro(): CarroSemaforo" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="3jr2d5iBOoXw7JMaSQFl-98">
+          <mxGeometry y="128" width="390" height="122" as="geometry" />
+        </mxCell>
+        <mxCell id="3jr2d5iBOoXw7JMaSQFl-102" value="«interface»&#xa;ICarro" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=40;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="640" y="1170" width="240" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="3jr2d5iBOoXw7JMaSQFl-103" value="+ start(): void&#xa;+ requestShutdown(): void&#xa;+ setOnTermino(callback: Runnable): void&#xa;+ getCor(): Color&#xa;+ getName(): String" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="3jr2d5iBOoXw7JMaSQFl-102">
+          <mxGeometry y="40" width="240" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="3jr2d5iBOoXw7JMaSQFl-104" value="CarroMonitor" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="1060" y="1160" width="460" height="260" as="geometry" />
+        </mxCell>
+        <mxCell id="3jr2d5iBOoXw7JMaSQFl-105" value="- quadranteAtual: Quadrante&#xa;- velocidade: long&#xa;- malhaView: MalhaView&#xa;- cor: Color&#xa;- ativo: boolean&#xa;- shutdownRequested: boolean&#xa;- onTermino: Runnable" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="3jr2d5iBOoXw7JMaSQFl-104">
+          <mxGeometry y="26" width="460" height="104" as="geometry" />
+        </mxCell>
+        <mxCell id="3jr2d5iBOoXw7JMaSQFl-106" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" vertex="1" parent="3jr2d5iBOoXw7JMaSQFl-104">
+          <mxGeometry y="130" width="460" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="3jr2d5iBOoXw7JMaSQFl-107" value="&lt;div&gt;+ CarroMonitor(qInicial: Quadrante, velocidade: Long, mv: MalhaView)&lt;/div&gt;&lt;div&gt;+ run(): void&lt;/div&gt;- moverParaQuadrante(prox: Quadrante): boolean&lt;br&gt;- reservarCaminho(caminho: List&amp;lt;Quadrante&amp;gt;): boolean&lt;br&gt;&lt;div&gt;- atravessarCruzamento(caminho: List&amp;lt;Quadrante&amp;gt;): void&lt;/div&gt;&lt;div&gt;- coletarSaidasPossiveis(entrada: Quadrante): List&amp;lt;Quadrante&amp;gt;&lt;/div&gt;&lt;div&gt;- encontrarCaminhosParaSaida(entr: Quadrante, said: Quadrante): List&amp;lt;Quadrante&amp;gt;&lt;/div&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="3jr2d5iBOoXw7JMaSQFl-104">
+          <mxGeometry y="138" width="460" height="122" as="geometry" />
+        </mxCell>
+        <mxCell id="3jr2d5iBOoXw7JMaSQFl-108" value="CarroSemaforo" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="50" y="1170" width="460" height="260" as="geometry" />
+        </mxCell>
+        <mxCell id="3jr2d5iBOoXw7JMaSQFl-109" value="- quadranteAtual: Quadrante&#xa;- velocidade: long&#xa;- malhaView: MalhaView&#xa;- cor: Color&#xa;- segurandoSemaforo: boolean&#xa;- ativo: boolean&#xa;- shutdownRequested: boolean&#xa;- onTermino: Runnable" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="3jr2d5iBOoXw7JMaSQFl-108">
+          <mxGeometry y="26" width="460" height="124" as="geometry" />
+        </mxCell>
+        <mxCell id="3jr2d5iBOoXw7JMaSQFl-110" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" vertex="1" parent="3jr2d5iBOoXw7JMaSQFl-108">
+          <mxGeometry y="150" width="460" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="3jr2d5iBOoXw7JMaSQFl-111" value="+ run(): void&lt;br&gt;&lt;div&gt;- moverParaQuadrante(): boolean&lt;/div&gt;&lt;div&gt;- coletarSaidasPossiveis(entrada: Quadrante): List&amp;lt;Quadrante&amp;gt;&lt;/div&gt;&lt;div&gt;- encontrarCaminhosParaSaida(entr: Quadrante, said: Quadrante): List&amp;lt;Quadrante&amp;gt;&lt;/div&gt;- reservarCaminho(caminho: List&amp;lt;Quadrante&amp;gt;): boolean&lt;br&gt;- atravessarCruzamento(caminho: List&amp;lt;Quadrante&amp;gt;): void" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="3jr2d5iBOoXw7JMaSQFl-108">
+          <mxGeometry y="158" width="460" height="102" as="geometry" />
+        </mxCell>
+        <mxCell id="3jr2d5iBOoXw7JMaSQFl-112" value="ControllerFactory" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="640" y="870" width="320" height="34" as="geometry" />
+        </mxCell>
+        <mxCell id="3jr2d5iBOoXw7JMaSQFl-113" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" vertex="1" parent="3jr2d5iBOoXw7JMaSQFl-112">
+          <mxGeometry y="26" width="320" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="3jr2d5iBOoXw7JMaSQFl-115" value="" style="endArrow=block;dashed=1;endFill=0;endSize=12;html=1;rounded=0;" edge="1" parent="1" source="3jr2d5iBOoXw7JMaSQFl-94" target="nCqFG1bU31Pww5qG3P4h-75">
+          <mxGeometry width="160" relative="1" as="geometry">
+            <mxPoint x="40" y="910" as="sourcePoint" />
+            <mxPoint x="1800" y="833.2142857142862" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="3jr2d5iBOoXw7JMaSQFl-116" value="" style="endArrow=block;dashed=1;endFill=0;endSize=12;html=1;rounded=0;" edge="1" parent="1" source="3jr2d5iBOoXw7JMaSQFl-98" target="nCqFG1bU31Pww5qG3P4h-75">
+          <mxGeometry width="160" relative="1" as="geometry">
+            <mxPoint x="190" y="910" as="sourcePoint" />
+            <mxPoint x="1800" y="819.6551724137935" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="3jr2d5iBOoXw7JMaSQFl-117" value="" style="endArrow=block;dashed=1;endFill=0;endSize=12;html=1;rounded=0;" edge="1" parent="1" source="3jr2d5iBOoXw7JMaSQFl-104" target="3jr2d5iBOoXw7JMaSQFl-102">
+          <mxGeometry width="160" relative="1" as="geometry">
+            <mxPoint x="-70" y="1390" as="sourcePoint" />
+            <mxPoint x="1727.4307002082996" y="680" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="3jr2d5iBOoXw7JMaSQFl-118" value="" style="endArrow=block;dashed=1;endFill=0;endSize=12;html=1;rounded=0;" edge="1" parent="1" source="3jr2d5iBOoXw7JMaSQFl-108" target="3jr2d5iBOoXw7JMaSQFl-102">
+          <mxGeometry width="160" relative="1" as="geometry">
+            <mxPoint x="230" y="1390" as="sourcePoint" />
+            <mxPoint x="1670" y="656.9696969696975" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="3jr2d5iBOoXw7JMaSQFl-119" value="&lt;&lt;create&gt;&gt;" style="endArrow=open;endFill=1;endSize=12;html=1;rounded=0;dashed=1;" edge="1" parent="1" source="3jr2d5iBOoXw7JMaSQFl-94" target="3jr2d5iBOoXw7JMaSQFl-104">
+          <mxGeometry width="160" relative="1" as="geometry">
+            <mxPoint x="40" y="1010" as="sourcePoint" />
+            <mxPoint x="60" y="1330" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="3jr2d5iBOoXw7JMaSQFl-120" value="&lt;&lt;create&gt;&gt;" style="endArrow=open;endFill=1;endSize=12;html=1;rounded=0;dashed=1;" edge="1" parent="1" source="3jr2d5iBOoXw7JMaSQFl-98" target="3jr2d5iBOoXw7JMaSQFl-108">
+          <mxGeometry width="160" relative="1" as="geometry">
+            <mxPoint x="310" y="1010" as="sourcePoint" />
+            <mxPoint x="360" y="1330" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="3jr2d5iBOoXw7JMaSQFl-121" value="&lt;&lt;create&gt;&gt;" style="endArrow=open;endFill=1;endSize=12;html=1;rounded=0;dashed=1;" edge="1" parent="1" source="3jr2d5iBOoXw7JMaSQFl-112" target="3jr2d5iBOoXw7JMaSQFl-94">
+          <mxGeometry width="160" relative="1" as="geometry">
+            <mxPoint x="40" y="1590" as="sourcePoint" />
+            <mxPoint x="40" y="1010" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="nCqFG1bU31Pww5qG3P4h-75" value="«interface»&#xa;ISimulacaoController" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=40;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="640" y="940" width="200" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="nCqFG1bU31Pww5qG3P4h-76" value="+ iniciarSimulacao(): void&#xa;+ pararInsercao(): void&#xa;+ encerrarSimulacao(): void" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="nCqFG1bU31Pww5qG3P4h-75">
+          <mxGeometry y="40" width="200" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="nCqFG1bU31Pww5qG3P4h-77" value="&lt;&lt;create&gt;&gt;" style="endArrow=open;endFill=1;endSize=12;html=1;rounded=0;dashed=1;" edge="1" parent="1" source="3jr2d5iBOoXw7JMaSQFl-112" target="3jr2d5iBOoXw7JMaSQFl-99">
+          <mxGeometry width="160" relative="1" as="geometry">
+            <mxPoint x="1000" y="570" as="sourcePoint" />
+            <mxPoint x="1158" y="603" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
